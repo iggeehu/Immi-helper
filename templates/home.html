@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+<h1>IMMIGENCE: Your USCIS case status & case range data insights</h1>
+    <form action="{{ url_for('views.handle_data') }}" method="post" name="user_submission">
+        <label for='case_number'>Type in your case number to query your case range data:</label>
+            <input type='text' id='case_number' name='case_number'>
+        <label for='petition_date'>Petition date:</label>
+            <input type='date' id='petition_date' name='petition_date'>
+        <label for="petition_type">Choose petition type:</label>
+            <select id="petition_type" name="petition_type">
+                <option value="I-485">I-485 Application to Register Permanent Residence or Adjust Status</option>
+                <option value="I-140">I-140 Immigrant Petition for Alien Worker</option>
+                <option value="I-765">I-765 Application for Employment Authorization</option>
+                <option value="I-821">I-821 Application for Temporary Protected Status</option>
+                <option value="I-131">I-131 Application for Travel Document</option>
+                <option value="I-129">I-129 Petition for a Nonimmigrant Worker</option>
+                <option value="I-539">I-539 Application to Extend/Change Nonimmigrant Status</option>
+                <option value="I-130">I-130 Petition for Alien Relative</option>
+                <option value="I-90">I-90 Application to Replace Permanent Resident Card</option>
+                <option value="I-485">I-485J Confirmation of Bona Fide Job Offer or Request for Job Portability</option>
+                <option value="N-400">N-400 Application for Naturalization</option>
+                <option value="Other">Other Petition Types</option>
+            </select> 
+            <input type='submit'>
+    </form>
+
+    
+</body>
+</html>
