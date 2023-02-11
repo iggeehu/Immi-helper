@@ -266,25 +266,33 @@ def updatedToday(cursor, caseNumber):
     query="Select LastFetched from "+getRangeId(caseNumber)+" WHERE CaseNumber = %s"
     cursor.execute(query, (caseNumber,))
     tuple =cursor.fetchone()
-    if(tuple[0]!=None):
-        print("UPDATED TODAY!!!!!!!!!!!!!!")
-        return True
-    return False
+    print(tuple)
+    if(tuple==None):
+        return False
+    if(tuple[0]==None):
+        return False
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!UPDATED TODAY!!!!!!!!!!!!!!")
+    return True
 
 def caseInited(cursor, caseNumber):
 
     query="Select StatusCode from "+getRangeId(caseNumber)+" WHERE CaseNumber = %s"
     cursor.execute(query, (caseNumber,))
     tuple =cursor.fetchone()
-    print(tuple)
+    if(tuple==None):
+        return False
     if(tuple[0]==None):
         return False
-    # print(cursor.fetchone())
-    if bool:
-        print("************************************** CASE INITIATED ALREADY")
-    # #if no result, the caseNumber has not been initialized
-    # return bool
     return True
+
+def scrapeComplete(cursor, rangeId):
+    query="Select count(*) from "+rangeId+" Where DATE(LastFetched) != DATE(NOW())"
+    cursor.execute(query)
+    tuple = cursor.fetchone()
+    if tuple[0]==0:
+        print("......................................................SCRAPE COMPLETE!")
+        return True
+    return False
 
 
 # def caseDeleted(cursor, caseNumber):

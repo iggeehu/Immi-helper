@@ -2,7 +2,10 @@ from flask import Blueprint, render_template, request, redirect, url_for
 from bs4 import BeautifulSoup as bs
 
 from helpers import getRangeId, checkType, rangeExist, scrapeSingle, createRangeQueryableTable, getCasePrefix, populateRangeTable, rangeTablePopulated
-from workers import initBatchScrape
+from workers import weeklyScrape
+from rq import Queue
+from redis import Redis
+import time
 
 views = Blueprint(__name__, "views")
 
@@ -16,6 +19,8 @@ def invalid():
 
 @views.route('/handle_data', methods=['POST'])
 def handle_data():
+    redis_conn = Redis()
+    init = Queue(connection=redis_conn)
     case_number = request.form['case_number']
     petition_date = request.form['petition_date']
     petition_type = request.form['petition_type']
@@ -31,14 +36,15 @@ def handle_data():
     #ifRangeExists, retrieve data from DB
         #put data into visualization API
             #save charts and render on the front end
-  
+
     if not rangeExist(rangeId):
         print("range Does Not Exist")
-        createRangeQueryableTable(rangeId)
+        createRangeJob = init.enqueue(createRangeQueryableTable, rangeId)
     if not rangeTablePopulated(rangeId):
-        populateRangeTable(rangeId)
+        populateRangeJob=init.enqueue(populateRangeTable, rangeId)
 
-    initBatchScrape(rangeId)
+    initScrapeJob = init.enqueue(weeklyScrape, rangeId)
+    
 
 
 

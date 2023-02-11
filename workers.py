@@ -1,6 +1,6 @@
 from distutils.log import error
 from xmlrpc.client import DateTime
-from helpers import scrapeSingle, databaseConnect, databaseClose, getCasePrefix, checkType, getStatusCode,caseInited, ScrapeEligibles, updatedToday
+from helpers import scrapeSingle, databaseConnect, databaseClose, scrapeComplete, getCasePrefix, checkType, getStatusCode,caseInited, ScrapeEligibles, updatedToday
 import numpy
 from random import randint as rand, sample as sample
 from time import sleep
@@ -8,13 +8,15 @@ import datetime
 from constants import SAMPLE_SIZE
 
 #goal: delete invalid cases from the table that stores the range's queryable cases, populate initial status code
-def initBatchScrape(rangeId):
+def weeklyScrape(rangeId):
     # print("rangeId from init:" + rangeId)
-    
+
     cnx=databaseConnect("QueryableCases")
     numOfTries=0
     if cnx!=None:
         cursor = cnx.cursor()
+        if(scrapeComplete(cursor, rangeId)):
+            return
         case_stub = getCasePrefix(rangeId)+rangeId[1:6]
         pool = range(50000, 99999) if rangeId[6]=='1' else range(0, 49999)
         
@@ -61,9 +63,6 @@ def dailyScrape(rangeId):
     ScrapeEligibles(rangeId, ("StatusCode", [2,4,6,8]))
     # ReadToRangeLog(rangeId)
 
-def weeklyScrape(rangeId):
-    ScrapeEligibles(rangeId, ())
-    # ReadToRangeLog(rangeId)
 
 def ScrapeEmpties(rangeId):
     ScrapeEligibles(rangeId, ("statusCode", [None]))
