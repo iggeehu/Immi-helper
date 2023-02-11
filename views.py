@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for
 from bs4 import BeautifulSoup as bs
 
-from helpers import getRangeId, checkType, rangeExist, scrapeSingle, createRangeQueryableTable, getCasePrefix, populateRangeTable
+from helpers import getRangeId, checkType, rangeExist, scrapeSingle, createRangeQueryableTable, getCasePrefix, populateRangeTable, rangeTablePopulated
 from workers import initBatchScrape
 
 views = Blueprint(__name__, "views")
@@ -35,9 +35,16 @@ def handle_data():
     if not rangeExist(rangeId):
         print("range Does Not Exist")
         createRangeQueryableTable(rangeId)
+    if not rangeTablePopulated(rangeId):
         populateRangeTable(rangeId)
-   
+
     initBatchScrape(rangeId)
+
+
+
+    
+   
+    
     # outputRaw = pullFromDb(rangeId)
     # outputCharts = visualizationApi(outputRaw)
    

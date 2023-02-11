@@ -3,12 +3,11 @@ from secret import secret, agentList
 import mysql.connector
 from mysql.connector import errorcode
 import requests
-import pandas
 import time
-import csv
 from bs4 import BeautifulSoup as bs
 import random
 from MySQLdb import _mysql
+import datetime
 
 
 def getCasePrefix(rangeId):
@@ -26,8 +25,8 @@ def getRangeId(case_number):
 
 def databaseConnect(schema):
     try:
-        cnx = mysql.connector.connect(user='root', password=secret,
-                                host='127.0.0.1',
+        cnx = mysql.connector.connect(user='admin', password=secret,
+                                host='immigence.cor389u8xll2.us-east-1.rds.amazonaws.com',
                                 database=schema)
         return cnx
     except mysql.connector.Error as err:
@@ -55,7 +54,7 @@ def scrapeSingle(case_number):
      #invalid cases: error case logs "You have the following errors:"
     resultTitle = soup.h1.string
     resultContent = soup.p.contents[0]
-    print("scrapeSingle showing resultTitle for case" + str(case_number))
+    print("scrapeSingle SCANNING" + str(case_number))
     
     if soup.h4!=None: 
         if soup.h4.string=="You have the following errors:":
@@ -114,9 +113,10 @@ def populateRangeTable(rangeId):
             except:
                 addOn+=1
             addOn+=1
+            cnx.commit()
     else:
         print("populating range table failed due to database Connection")
-    cnx.commit()
+    
     cursor.close()
     databaseClose(cnx)
 
@@ -131,15 +131,10 @@ def rangeExist(rangeId):
             #a table exists, now check that it actually has rows (in case createNewRange stopped midway)
             if table[0] == rangeId:
                 ret = True
-                # cursorToCountRow = cnx.cursor()
-                # query = ("Select count(*) from "+rangeId)
-                # cursorToCountRow.execute(query)
-                # for count in cursorToCountRow: 
         cursor.close()
         databaseClose(cnx)
         return ret
 
-    # engine = create_engine("immigence.cor389u8xll2.us-east-1.rds.amazonaws.com")
 
 # Most returned case status from USCIS website contains the case type, 
 # check if this case type is the same as user-submitted case type. USCIS' type is source of truth
@@ -191,10 +186,61 @@ def getStatusCode(resultTitle):
         return 15
     return 14
    
-    
+def findEligibles(cursor, rangeId, condition):
+    query="Select CaseNumber from "+ rangeId
+    if len(condition)!=0:
+        whereClause = "Where "+condition[0]+" in ("
+        for val in condition[1]:
+            whereClause +=val+","
+        if whereClause[len(whereClause) - 1]==',':
+            whereClause=whereClause[0, len(whereClause) - 2]
+
+        whereClause+=") and DATE(LastFetched) != DATE(NOW())"
+        query+=whereClause
+    print(query)
+    cursor.execute(query)
+    list=[]
+    for tuple in cursor.fetchall():
+        list.insert(tuple[0])
+    return list
+  
     
 
+def ScrapeEligibles(rangeId, condition):
+    cnx=databaseConnect("QueryableCases")
+    numOfTries=0
+    if cnx!=None:
+        cursor = cnx.cursor()
+        eligibles = findEligibles(cursor, rangeId, condition) 
         
+        for caseNumber in eligibles:
+            numOfTries+=1
+            if numOfTries%100==0:
+                time.sleep(15)
+            
+            try:
+                caseResult = scrapeSingle(caseNumber)
+                if caseResult!=None:
+                    title=caseResult['title']
+                    content=caseResult['content']
+                    caseType = checkType("", content)
+                    statusCode = getStatusCode(title)
+                    now = datetime.datetime.now()
+                    dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
+                    query ="UPDATE " +rangeId+ " SET caseType = %s, statusCode = %s, lastFetched = %s WHERE CaseNumber = %s"
+                    cursor.execute(query, (caseType, statusCode, dt_string, caseNumber))
+                    cnx.commit()
+            except:
+                print(numOfTries)
+                time.sleep(30)
+                ScrapeEligibles(rangeId)
+            
+            # sleep(rand(1, 2))
+        cursor.close()
+        
+    else:
+        print('initial Batch scan failed due to database connection issues')
+    databaseClose(cnx)
     
 
 def getStatusText(status_code):
@@ -217,21 +263,38 @@ def getStatusText(status_code):
     return status_types.get(status_code)
 
 def caseInited(cursor, caseNumber):
+
     query="Select StatusCode from "+getRangeId(caseNumber)+" WHERE CaseNumber = %s"
     cursor.execute(query, (caseNumber,))
-    bool =cursor.fetchone()[0] != None
+    tuple =cursor.fetchone()
+    print(tuple)
+    if(tuple[0]==None):
+        return False
+    # print(cursor.fetchone())
     if bool:
         print("************************************** CASE INITIATED ALREADY")
-    #if no result, the caseNumber has not been initialized
-    return bool
+    # #if no result, the caseNumber has not been initialized
+    # return bool
+    return True
 
 
-def caseDeleted(cursor, caseNumber):
-    rangeId = getRangeId(caseNumber)
-    query="select exists (select * from "+rangeId+" where CaseNumber = %s)"
-    cursor.execute(query, (caseNumber,))
-    bool = cursor.fetchall()[0][0]==0
-    if bool:
-         print("************************************** CASE DELETED ALREADY")
-    return bool
+# def caseDeleted(cursor, caseNumber):
+#     rangeId = getRangeId(caseNumber)
+#     query="select exists (select * from "+rangeId+" where CaseNumber = %s)"
+#     cursor.execute(query, (caseNumber,))
+#     bool = cursor.fetchall()[0][0]==0
+#     if bool:
+#          print("************************************** CASE DELETED ALREADY")
+#     return bool
     
+
+def rangeTablePopulated(rangeId):
+    cnx=databaseConnect("QueryableCases")
+    cursor=cnx.cursor()
+    query="Select count(*) from "+rangeId
+    cursor.execute(query)
+    if cursor.fetchall()[0][0]>49000:
+        print("rangeTablePopulated")
+        return True
+    print("rangeTable NOT populated")
+    return False
