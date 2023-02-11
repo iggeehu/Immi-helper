@@ -262,6 +262,15 @@ def getStatusText(status_code):
                     }
     return status_types.get(status_code)
 
+def updatedToday(cursor, caseNumber):
+    query="Select LastFetched from "+getRangeId(caseNumber)+" WHERE CaseNumber = %s"
+    cursor.execute(query, (caseNumber,))
+    tuple =cursor.fetchone()
+    if(tuple[0]!=None):
+        print("UPDATED TODAY!!!!!!!!!!!!!!")
+        return True
+    return False
+
 def caseInited(cursor, caseNumber):
 
     query="Select StatusCode from "+getRangeId(caseNumber)+" WHERE CaseNumber = %s"

@@ -1,6 +1,6 @@
 from distutils.log import error
 from xmlrpc.client import DateTime
-from helpers import scrapeSingle, databaseConnect, databaseClose, getCasePrefix, checkType, getStatusCode,caseInited, ScrapeEligibles
+from helpers import scrapeSingle, databaseConnect, databaseClose, getCasePrefix, checkType, getStatusCode,caseInited, ScrapeEligibles, updatedToday
 import numpy
 from random import randint as rand, sample as sample
 from time import sleep
@@ -26,18 +26,22 @@ def initBatchScrape(rangeId):
                 sleep(15)
             
             caseNumber = case_stub + str(number)
-            if not caseInited(cursor, caseNumber):
+            if not caseInited(cursor, caseNumber) and not updatedToday(cursor, caseNumber):
                 try:
                     caseResult = scrapeSingle(caseNumber)
+                    now = datetime.datetime.now()
+                    dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
                     if caseResult!=None:
                         title=caseResult['title']
                         content=caseResult['content']
                         caseType = checkType("", content)
                         statusCode = getStatusCode(title)
-                        now = datetime.datetime.now()
-                        dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
                         query ="UPDATE " +rangeId+ " SET caseType = %s, statusCode = %s, lastFetched = %s WHERE CaseNumber = %s"
                         cursor.execute(query, (caseType, statusCode, dt_string, caseNumber))
+                    else:
+                        query ="UPDATE " +rangeId+ " SET lastFetched = %s WHERE CaseNumber = %s"
+                        cursor.execute(query, (dt_string, caseNumber))
+
                 except:
                     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!EXCEPTIONNN")
                     print(numOfTries)
