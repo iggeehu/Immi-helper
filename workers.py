@@ -1,68 +1,134 @@
 from distutils.log import error
 from xmlrpc.client import DateTime
-from helpers import scrapeSingle, databaseConnect, databaseClose, scrapeComplete, getCasePrefix, checkType, getStatusCode,caseInited, ScrapeEligibles, updatedToday
+
+from helpers import casesNeverScanned, isLogUpdatedToday, scrapeSingle, casesNotUpdatedToday, databaseConnect, databaseClose, scrapeComplete, getCasePrefix, checkType, getStatusCode,caseInited, fetchedButInvalid, OneStepBeforeApprovalAndFresh
 import numpy
 from random import randint as rand, sample as sample
 from time import sleep
 import datetime
 from constants import SAMPLE_SIZE
 
+
 #goal: delete invalid cases from the table that stores the range's queryable cases, populate initial status code
 def weeklyScrape(rangeId):
     # print("rangeId from init:" + rangeId)
-
     cnx=databaseConnect("QueryableCases")
-    numOfTries=0
     if cnx!=None:
         cursor = cnx.cursor()
-        if(scrapeComplete(cursor, rangeId)):
-            return
-        case_stub = getCasePrefix(rangeId)+rangeId[1:6]
-        pool = range(50000, 99999) if rangeId[6]=='1' else range(0, 49999)
-        
-        randomizedPool = sample(pool, 49999)
-        
-        for number in randomizedPool:
-            numOfTries+=1
-            if numOfTries%100==0:
-                sleep(15)
+        #as long as there are cases that are not updated today
+        #if weeklyscrape is run for the first time, use casesNeverScanned, if for weekly jobs, use casesNotUpdatedToday
+        list=casesNotUpdatedToday(cursor, rangeId)
+        print(list)
+        while len(list) !=0:
+            print(len(list))
+            caseNumber = list.pop()
             
-            caseNumber = case_stub + str(number)
-            if not caseInited(cursor, caseNumber) and not updatedToday(cursor, caseNumber):
-                try:
-                    caseResult = scrapeSingle(caseNumber)
-                    now = datetime.datetime.now()
-                    dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
-                    if caseResult!=None:
-                        title=caseResult['title']
-                        content=caseResult['content']
-                        caseType = checkType("", content)
-                        statusCode = getStatusCode(title)
-                        query ="UPDATE " +rangeId+ " SET caseType = %s, statusCode = %s, lastFetched = %s WHERE CaseNumber = %s"
-                        cursor.execute(query, (caseType, statusCode, dt_string, caseNumber))
-                    else:
-                        query ="UPDATE " +rangeId+ " SET lastFetched = %s WHERE CaseNumber = %s"
-                        cursor.execute(query, (dt_string, caseNumber))
+            try:
+                caseResult = scrapeSingle(caseNumber)
+                now = datetime.datetime.now()
+                dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
+                #not an invalid case
+                if caseResult!=None:
+                    title=caseResult['title']
+                    content=caseResult['content']
+                    caseType = checkType("", content)
+                    statusCode = getStatusCode(title)
+                    query ="UPDATE " +rangeId+ " SET caseType = %s, statusCode = %s, lastFetched = %s WHERE CaseNumber = %s"
+                    cursor.execute(query, (caseType, statusCode, dt_string, caseNumber))
+                #an invalid case, only update lastFetched
+                else:
+                    query ="UPDATE " +rangeId+ " SET lastFetched = %s WHERE CaseNumber = %s"
+                    cursor.execute(query, (dt_string, caseNumber))
 
-                except:
-                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!EXCEPTIONNN")
-                    print(numOfTries)
-                    sleep(30)
-                    initBatchScrape(rangeId)
-            else:
-                print("Nothing to scrape")
-            # sleep(rand(1, 2))
+            except:
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!EXCEPTIONNN")
+                sleep(10)
+                weeklyScrape(rangeId)
+            
+                # sleep(rand(1, 2))
             cnx.commit()
         cursor.close()
         
     else:
         print('initial Batch scan failed due to database connection issues')
+        weeklyScrape(rangeId)
     databaseClose(cnx)
        
 def dailyScrape(rangeId):    
-    ScrapeEligibles(rangeId, ("StatusCode", [2,4,6,8]))
-    # ReadToRangeLog(rangeId)
+    cnx=databaseConnect("QueryableCases")
+    numOfTries=0
+    if cnx!=None:
+        cursor = cnx.cursor()
+        list = OneStepBeforeApprovalAndFresh(cursor,rangeId)
+        while len(caseList)!=0:
+            CaseNumber = list.pop()
+            try:
+                        caseResult = scrapeSingle(caseNumber)
+                        now = datetime.datetime.now()
+                        dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
+                        if caseResult!=None:
+                            title=caseResult['title']
+                            content=caseResult['content']
+                            caseType = checkType("", content)
+                            statusCode = getStatusCode(title)
+                            query ="UPDATE " +rangeId+ " SET caseType = %s, statusCode = %s, lastFetched = %s WHERE CaseNumber = %s"
+                            cursor.execute(query, (caseType, statusCode, dt_string, caseNumber))
+
+            except:
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!EXCEPTIONNN")
+                print(numOfTries)
+                sleep(10)
+                dailyScrape(rangeId)
+
+def checkAndFillRange(rangeId):
+    cnx = databaseConnect("RangeLog")
+    tableName = "R"+rangeId
+    cursor = cnx.cursor()
+    now = datetime.datetime.now()
+    if not isLogUpdatedToday(cursor, rangeId):
+        caseTypes = {"I-140":0,"I-765":0,"I-821":0,"I-131":0,"I-129":0,"I-539":0,"I-130":0,"I-90":0,"I-485":0,"N-400":0,"Other":0}
+        for caseType in caseTypes.keys():
+
+            cnx2=databaseConnect("QueryableCases")
+            cursor2=cnx2.cursor()
+            query="Select StatusCode from "+rangeId+" where CaseType=%s"
+            cursor2.execute(query, (caseType,))
+            statusCodesTups = cursor2.fetchall()
+            cursor2.close()
+            cnx2.close()
+
+            statusCodesDict ={"Received":0, "ActiveReview":0, "RFEreq":0, "RFErec":0, "IntReady":0, "IntSched":0, "Denied":0, "Approved":0, "Other":0}
+            for tup in statusCodesTups:
+                if tup[0]==1:
+                    statusCodesDict["Received"]+=1
+                if tup[0]==2:
+                    statusCodesDict["ActiveReview"]+=1
+                if tup[0]==3:
+                    statusCodesDict["RFEreq"]+=1
+                if tup[0]==4:
+                    statusCodesDict["RFErec"]+=1
+                if tup[0]==5:
+                    statusCodesDict["IntReady"]+=1
+                if tup[0]==6:
+                    statusCodesDict["IntSched"]+=1
+                if tup[0]==7:
+                    statusCodesDict["Denied"]+=1
+                if tup[0]==9 or  tup[0]==10 or tup[0]==11 or tup[0]==12 or tup[0]==13 or tup[0]==15:
+                    statusCodesDict["Approved"]+=1
+                if tup[0]==14:
+                    statusCodesDict["Other"]+=1
+            insertQuery="INSERT INTO "+tableName+" (CollectionDate, CaseType, Received,  \
+             ActiveReview, RFEreq, RFErec, IntReady, IntSched, Denied, Approved, Other) \
+            Values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            cursor.execute(insertQuery, (now.strftime("%Y-%m-%d"), caseType,
+            statusCodesDict["Received"],statusCodesDict["ActiveReview"], 
+            statusCodesDict["RFEreq"],statusCodesDict["RFErec"],
+            statusCodesDict["IntReady"], statusCodesDict["IntSched"],
+            statusCodesDict["Denied"], statusCodesDict["Approved"], statusCodesDict["Other"]))
+            cnx.commit()
 
 
-def ScrapeEmpties(rangeId):
-    ScrapeEligibles(rangeId, ("statusCode", [None]))
+
+
+
+

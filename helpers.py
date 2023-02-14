@@ -1,12 +1,12 @@
-from sqlalchemy import create_engine
+
 from secret import secret, agentList
+from random import randint as rand, sample as sample
 import mysql.connector
 from mysql.connector import errorcode
 import requests
 import time
 from bs4 import BeautifulSoup as bs
 import random
-from MySQLdb import _mysql
 import datetime
 
 
@@ -19,9 +19,9 @@ def getRangeId(case_number):
     RangeIdPrefix = RangeIdPrefixByFo.get(case_number[0:3])
     if len(case_number)!=13 or RangeIdPrefix==None:
         return None
-    lastFiveDigs=case_number[8:]
-    RangeIdSuffix = "0" if int(lastFiveDigs)<49999 else "1"
-    return RangeIdPrefix + case_number[3:8] + RangeIdSuffix
+    lastFourDigs=case_number[9:]
+    RangeIdSuffix = "0" if int(lastFourDigs)<4999 else "1"
+    return RangeIdPrefix + case_number[3:9] + RangeIdSuffix
 
 def databaseConnect(schema):
     try:
@@ -70,10 +70,14 @@ def scrapeSingle(case_number):
 # def batchScrape(rangeId):
 #     K091781
 
+
+    
+
 def createRangeQueryableTable(rangeId):
     cnx = databaseConnect("QueryableCases")
     if cnx!=None:
         cursor = cnx.cursor()
+
         query = ("CREATE TABLE " + rangeId + " LIKE A001450")
         try:
             cursor.execute(query)
@@ -82,43 +86,65 @@ def createRangeQueryableTable(rangeId):
 
 
 def createRangeLogTable(rangeId):
-    cnx = databaseConnect("QueryableCases")
+    if rangeLogTableExist(rangeId):
+        cnx = databaseConnect("RangeLog")
+        tableName = "R"+rangeId
+        if cnx!=None:
+            cursor = cnx.cursor()
+            query = ("CREATE TABLE " + tableName + " LIKE RA001450")
+            try:
+                cursor.execute(query)
+            except:
+                print("Creating new table failed")
+
+
+def rangeLogTableExist(rangeId):
+    cnx = databaseConnect("RangeLog")
+    tableName = "R"+rangeId
     if cnx!=None:
         cursor = cnx.cursor()
-        query = ("CREATE TABLE " + rangeId + " LIKE A001450")
-        try:
-            cursor.execute(query)
-        except:
-            print("Creating new table failed")
+        query = "SELECT EXISTS (SELECT "+tableName+" FROM information_schema.TABLES"
+        cursor.execute(query)
+        answer = cursor.fetchone()
+        if answer==None or answer[0]==0:
+            return False
+        return True
+    else:
+        return False
 
 def populateRangeTable(rangeId):
-    cnx=databaseConnect("QueryableCases")
-    if cnx!=None:
-        case_stub = getCasePrefix(rangeId)+rangeId[1:6]
-        cursor = cnx.cursor()
+    if not rangeTablePopulated(rangeId):
+        cnx=databaseConnect("QueryableCases")
+        if cnx!=None:
+            case_stub = getCasePrefix(rangeId)+rangeId[1:7]
+            cursor = cnx.cursor()
 
-        base=0 if rangeId[6]==0 else 50000
-        addOn = 0
-        while (addOn<50000):
-            
-            copy = str(base+addOn)
-            i=0
-            while i<5-len(str(base+addOn)):
-                copy=str(0)+copy
-                i+=1
-            caseNumber = case_stub + copy
-            try:
-                query = ("INSERT INTO " +rangeId + " (CaseNumber) values (%s)")
-                cursor.execute(query,(caseNumber,))
-            except:
+            base=0 if rangeId[7]==0 else 5000
+            addOn = 0
+            while (addOn<5000):
+                
+                copy = str(base+addOn)
+                i=0
+                while i<4-len(str(base+addOn)):
+                    copy=str(0)+copy
+                    i+=1
+                caseNumber = case_stub + copy
+                try:
+                    query = ("INSERT INTO " +rangeId + " (CaseNumber) values (%s)")
+                    cursor.execute(query,(caseNumber,))
+                except:
+                    addOn+=1
                 addOn+=1
-            addOn+=1
-            cnx.commit()
+                cnx.commit()
+        else:
+            print("populating range table failed due to database Connection")
+        
+        cursor.close()
+        databaseClose(cnx)
     else:
-        print("populating range table failed due to database Connection")
-    
-    cursor.close()
-    databaseClose(cnx)
+        return
+
+
 
 def rangeExist(rangeId):
     cnx = databaseConnect("QueryableCases")
@@ -186,61 +212,15 @@ def getStatusCode(resultTitle):
         return 15
     return 14
    
-def findEligibles(cursor, rangeId, condition):
-    query="Select CaseNumber from "+ rangeId
-    if len(condition)!=0:
-        whereClause = "Where "+condition[0]+" in ("
-        for val in condition[1]:
-            whereClause +=val+","
-        if whereClause[len(whereClause) - 1]==',':
-            whereClause=whereClause[0, len(whereClause) - 2]
-
-        whereClause+=") and DATE(LastFetched) != DATE(NOW())"
-        query+=whereClause
-    print(query)
+#    return cases that are one step before approval and not updated today
+def OneStepBeforeApprovalAndFresh(cursor, rangeId):
+    query="Select CaseNumber from "+ rangeId +" where StatusCode in (2, 4, 5, 6, 8, 14) and DATE(LastFetched) != DATE(NOW())"
     cursor.execute(query)
     list=[]
     for tuple in cursor.fetchall():
         list.insert(tuple[0])
     return list
   
-    
-
-def ScrapeEligibles(rangeId, condition):
-    cnx=databaseConnect("QueryableCases")
-    numOfTries=0
-    if cnx!=None:
-        cursor = cnx.cursor()
-        eligibles = findEligibles(cursor, rangeId, condition) 
-        
-        for caseNumber in eligibles:
-            numOfTries+=1
-            if numOfTries%100==0:
-                time.sleep(15)
-            
-            try:
-                caseResult = scrapeSingle(caseNumber)
-                if caseResult!=None:
-                    title=caseResult['title']
-                    content=caseResult['content']
-                    caseType = checkType("", content)
-                    statusCode = getStatusCode(title)
-                    now = datetime.datetime.now()
-                    dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
-                    query ="UPDATE " +rangeId+ " SET caseType = %s, statusCode = %s, lastFetched = %s WHERE CaseNumber = %s"
-                    cursor.execute(query, (caseType, statusCode, dt_string, caseNumber))
-                    cnx.commit()
-            except:
-                print(numOfTries)
-                time.sleep(30)
-                ScrapeEligibles(rangeId)
-            
-            # sleep(rand(1, 2))
-        cursor.close()
-        
-    else:
-        print('initial Batch scan failed due to database connection issues')
-    databaseClose(cnx)
     
 
 def getStatusText(status_code):
@@ -262,7 +242,7 @@ def getStatusText(status_code):
                     }
     return status_types.get(status_code)
 
-def updatedToday(cursor, caseNumber):
+def fetchedButInvalid(cursor, caseNumber):
     query="Select LastFetched from "+getRangeId(caseNumber)+" WHERE CaseNumber = %s"
     cursor.execute(query, (caseNumber,))
     tuple =cursor.fetchone()
@@ -274,8 +254,38 @@ def updatedToday(cursor, caseNumber):
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!UPDATED TODAY!!!!!!!!!!!!!!")
     return True
 
-def caseInited(cursor, caseNumber):
+def shuffledCasesList(rangeId):
+    case_stub = getCasePrefix(rangeId)+rangeId[1:7]
+    list=[]
+    pool = range(5000, 9999) if rangeId[7]=='1' else range(0, 4999) 
+    randomizedPool = sample(pool, 4999)
+    for number in randomizedPool:
+            list.append(case_stub + str(number))
+            
+    return list
 
+def casesNotUpdatedToday(cursor, rangeId):
+    query="Select CaseNumber from "+rangeId+" WHERE DATE(LastFetched) != DATE(NOW())"
+    cursor.execute(query)
+    listTups = cursor.fetchall()
+    list=[]
+    for tup in listTups:
+        list.append(tup[0])
+    return list
+
+def casesNeverScanned(cursor, rangeId):
+    query="Select CaseNumber from "+rangeId+" WHERE LastFetched is null"
+    cursor.execute(query)
+    listTups = cursor.fetchall()
+    list=[]
+    for tup in listTups:
+        list.append(tup[0])
+    return list
+    
+            
+    return list
+
+def caseInited(cursor, caseNumber):
     query="Select StatusCode from "+getRangeId(caseNumber)+" WHERE CaseNumber = %s"
     cursor.execute(query, (caseNumber,))
     tuple =cursor.fetchone()
@@ -286,13 +296,20 @@ def caseInited(cursor, caseNumber):
     return True
 
 def scrapeComplete(cursor, rangeId):
-    query="Select count(*) from "+rangeId+" Where DATE(LastFetched) != DATE(NOW())"
+    # //if there are cases that have never been scraped, bypass this boolean by returning false
+    query="Select count(*) from "+rangeId+" Where LastFetched IS NULL"
     cursor.execute(query)
     tuple = cursor.fetchone()
-    if tuple[0]==0:
+    if tuple[0]!=0:
         print("......................................................SCRAPE COMPLETE!")
+        return False
+    else:
+        query="Select count(*) from "+rangeId+" Where DATE(LastFetched) != DATE(NOW())"
+        cursor.execute(query)
+        tuple = cursor.fetchall()
+        if len(tuple)!=0:
+            return False
         return True
-    return False
 
 
 # def caseDeleted(cursor, caseNumber):
@@ -303,15 +320,24 @@ def scrapeComplete(cursor, rangeId):
 #     if bool:
 #          print("************************************** CASE DELETED ALREADY")
 #     return bool
-    
+
 
 def rangeTablePopulated(rangeId):
     cnx=databaseConnect("QueryableCases")
     cursor=cnx.cursor()
     query="Select count(*) from "+rangeId
     cursor.execute(query)
-    if cursor.fetchall()[0][0]>49000:
+    if cursor.fetchall()[0][0]>4900:
         print("rangeTablePopulated")
         return True
     print("rangeTable NOT populated")
     return False
+
+def isLogUpdatedToday(cursor, rangeId):
+    tableName = "R" + rangeId
+    query = "select * from "+tableName+" where CollectionDate = CURDATE()" 
+    cursor.execute(query)
+    listTups= cursor.fetchall()
+    if len(listTups)<11:
+        return False
+    return True
