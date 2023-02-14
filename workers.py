@@ -1,7 +1,12 @@
 from distutils.log import error
 from xmlrpc.client import DateTime
 
-from helpers import casesNeverScanned, isLogUpdatedToday, scrapeSingle, casesNotUpdatedToday, databaseConnect, databaseClose, scrapeComplete, getCasePrefix, checkType, getStatusCode,caseInited, fetchedButInvalid, OneStepBeforeApprovalAndFresh
+from helpers.dbOperations import databaseConnect, databaseClose, scrapeSingle
+from helpers.getCases import casesNotUpdatedToday, OneStepBeforeApprovalAndFresh
+from helpers.conversions import getStatusCode
+from helpers.checks import checkType, isLogUpdatedToday
+
+
 import numpy
 from random import randint as rand, sample as sample
 from time import sleep
@@ -60,8 +65,8 @@ def dailyScrape(rangeId):
     if cnx!=None:
         cursor = cnx.cursor()
         list = OneStepBeforeApprovalAndFresh(cursor,rangeId)
-        while len(caseList)!=0:
-            CaseNumber = list.pop()
+        while len(list)!=0:
+            caseNumber = list.pop()
             try:
                         caseResult = scrapeSingle(caseNumber)
                         now = datetime.datetime.now()
@@ -79,6 +84,8 @@ def dailyScrape(rangeId):
                 print(numOfTries)
                 sleep(10)
                 dailyScrape(rangeId)
+    databaseClose(cnx)
+    
 
 def checkAndFillRange(rangeId):
     cnx = databaseConnect("RangeLog")
@@ -126,6 +133,7 @@ def checkAndFillRange(rangeId):
             statusCodesDict["IntReady"], statusCodesDict["IntSched"],
             statusCodesDict["Denied"], statusCodesDict["Approved"], statusCodesDict["Other"]))
             cnx.commit()
+    databaseClose(cnx)
 
 
 

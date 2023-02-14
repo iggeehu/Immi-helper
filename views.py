@@ -1,11 +1,15 @@
 from flask import Blueprint, render_template, request, redirect, url_for
 from bs4 import BeautifulSoup as bs
 
-from helpers import createRangeLogTable, databaseConnect, databaseClose, getRangeId, checkType, rangeExist, getStatusCode, rangeLogTableExist, scrapeSingle, createRangeQueryableTable, populateRangeTable, rangeTablePopulated
+from helpers.dbOperations import scrapeSingle, createRangeLogTable
+from helpers.conversions import getRangeId, getStatusCode
+from helpers.checks import checkType, rangeExist
+from helpers.dbConnect import databaseClose, databaseConnect
+
 from workers import weeklyScrape
 from rq import Queue, Retry
 from redis import Redis
-from graphs import script, div
+# from Visualizations.caseTypePie import script, div
 
 
 
@@ -63,15 +67,16 @@ def handle_data():
 
     if not rangeExist(rangeId):
         print("range Does Not Exist")
-        createRangeJob = init.enqueue('helpers.createRangeQueryableTable', rangeId)
-        populateRangeJob=init.enqueue('helpers.populateRangeTable', rangeId, retry=Retry(max=10, interval=10), 
+        createRangeJob = init.enqueue('helpers.dbOperations.createRangeQueryableTable', rangeId)
+        populateRangeJob=init.enqueue('helpers.dbOperations.populateRangeTable', rangeId, retry=Retry(max=10, interval=10), 
         depends_on=createRangeJob, job_timeout='24h')
         initScrapeJob = init.enqueue('workers.weeklyScrape', rangeId, retry=Retry(max=10, interval=10), depends_on=populateRangeJob)
+
         createRangeLogTable(rangeId)
         return render_template("checkBacklater.html")
     else:
         dailyScrapeJob = init.enqueue('workers.dailyScrape', rangeId, retry=Retry(max=10, interval=10),job_timeout='24h')
-        createRangeLogTableJob = init.enqueue('helpers.createRangeLogTable', rangeId, retry=Retry(max=10, interval=10))
+        createRangeLogTableJob = init.enqueue('helpers.dbOperations.createRangeLogTable', rangeId, retry=Retry(max=10, interval=10))
         checkAndFillRangeLogJob = init.enqueue('workers.checkAndFillRange', rangeId, retry=Retry(max=10, interval=10), depends_on=createRangeLogTableJob)
         return redirect(url_for('views.caseData', rangeId=rangeId))
 
