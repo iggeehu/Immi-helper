@@ -30,7 +30,7 @@ def casesNeverScanned(cursor, rangeId):
     return list
 
 def OneStepBeforeApprovalAndFresh(cursor, rangeId):
-    query="Select CaseNumber from "+ rangeId +" where (StatusCode in (2, 4, 5, 6, 8, 14) and DATE(LastFetched) <> CURDATE()) or (LastFetched is null)"
+    query="Select CaseNumber from "+ rangeId +" where (StatusCode in (2, 4, 5, 6, 8, 14) and DATE(LastFetched) != CURDATE()) or (LastFetched is null)"
     cursor.execute(query)
     list=[]
     for tuple in cursor.fetchall():

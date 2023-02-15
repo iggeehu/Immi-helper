@@ -32,7 +32,7 @@ def rangeExist(rangeId):
         return ret
 
 def checkType(petition_type, resultContent):
-    case_types = ["I-485", 'I-140', 'I-765', 'I-821', 'I-131', 'I-129', 'I-539', 'I-130', 'I-90', 'N-400']
+    case_types = ["I-485", 'I-140', 'I-765', 'I-821', 'I-131', 'I-129', 'I-539', 'I-130', 'I-90', 'N-400', 'I-751', 'I-824']
     first_line = resultContent[0:100]
     # print(first_line)
     true_type = petition_type

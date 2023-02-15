@@ -5,7 +5,7 @@ from helpers.dbOperations import scrapeSingle, createRangeLogTable, addToDistrib
 from helpers.conversions import getRangeId, getStatusCode
 from helpers.checks import checkType, rangeExist
 from helpers.dbConnect import databaseClose, databaseConnect
-
+from Visualizations.caseTypePie import DistributionData, script, div
 from workers import weeklyScrape
 from rq import Queue, Retry
 from redis import Redis
@@ -76,15 +76,16 @@ def handle_data():
         createRangeLogTableJob=init.enqueue('helpers.dbOperations.createRangeLogTable', rangeId, retry=Retry(max=10, interval=10), depends_on=initScrapeJob)
         return render_template("checkBacklater.html")
     else:
-        dailyScrapeJob = init.enqueue('workers.dailyScrape', rangeId, retry=Retry(max=10, interval=10),job_timeout='24h')
+        dailyScrapeJob = init.enqueue('workers.weeklyScrape', rangeId, retry=Retry(max=10, interval=10),job_timeout='24h')
         createRangeLogTableJob = init.enqueue('helpers.dbOperations.createRangeLogTable', rangeId, retry=Retry(max=10, interval=10))
         checkAndFillRangeLogJob = init.enqueue('workers.checkAndFillRange', rangeId, retry=Retry(max=10, interval=10), depends_on=createRangeLogTableJob)
         addToDistributionTable(rangeId)
-        return redirect(url_for('views.caseData', rangeId=rangeId))
+        return redirect(url_for('views.caseData', rangeId = rangeId))
 
 @views.route('/caseData/<rangeId>', methods=['GET'])
 def caseData(rangeId):
-    return render_template("caseData.html")
+    DistributionData(rangeId)
+    return render_template("caseData.html", rangeId=rangeId, script=script, div=div)
 
     
    

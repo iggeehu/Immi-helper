@@ -27,7 +27,7 @@ def getStatusCode(resultTitle):
             return 5
         if "Scheduled" in resultTitle:
             return 6
-    if "Denied" in resultTitle:
+    if "Denied" in resultTitle or "Rejected" in resultTitle:
         return 7
     if "Case Was Updated" in resultTitle:
         return 8

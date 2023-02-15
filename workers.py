@@ -97,56 +97,73 @@ def checkAndFillRange(rangeId):
     tableName = "R"+rangeId
     cursor = cnx.cursor()
     now = datetime.datetime.now()
-    if not isLogUpdatedToday(cursor, rangeId):
-        caseTypes = {"I-140":0,"I-765":0,"I-821":0,"I-131":0,"I-129":0,"I-539":0,"I-130":0,"I-90":0,"I-485":0,"N-400":0,"Other":0}
-        for caseType in caseTypes.keys():
+   
+    caseTypes = {"I-140":0,"I-765":0,"I-821":0,"I-131":0,"I-129":0,"I-539":0,"I-130":0,"I-90":0,"I-485":0,"N-400":0,"I-751":0, "I-824":0, "Other":0}
 
-            cnx2=databaseConnect("QueryableCases")
-            cursor2=cnx2.cursor()
+    for caseType in caseTypes.keys():
+        cnx2=databaseConnect("QueryableCases")
+        cursor2=cnx2.cursor()
+        if caseType!="Other":
             query="Select StatusCode from "+rangeId+" where CaseType=%s"
             cursor2.execute(query, (caseType,))
-            statusCodesTups = cursor2.fetchall()
-            cursor2.close()
-            cnx2.close()
+        else:
+            query="Select StatusCode from "+rangeId+" where CaseType='' or CaseType is null"
+            cursor2.execute(query)
+        statusCodesTups = cursor2.fetchall()
+        cursor2.close()
+        cnx2.close()
 
-            statusCodesDict ={"Received":0, "ActiveReview":0, "RFEreq":0, "RFErec":0, "IntReady":0, "IntSched":0, "Denied":0, "Approved":0, "Other":0}
-            for tup in statusCodesTups:
-                if tup[0]==1:
-                    statusCodesDict["Received"]+=1
-                if tup[0]==2:
-                    statusCodesDict["ActiveReview"]+=1
-                if tup[0]==3:
-                    statusCodesDict["RFEreq"]+=1
-                if tup[0]==4:
-                    statusCodesDict["RFErec"]+=1
-                if tup[0]==5:
-                    statusCodesDict["IntReady"]+=1
-                if tup[0]==6:
-                    statusCodesDict["IntSched"]+=1
-                if tup[0]==7:
-                    statusCodesDict["Denied"]+=1
-                if tup[0]==9 or  tup[0]==10 or tup[0]==11 or tup[0]==12 or tup[0]==13 or tup[0]==15:
-                    statusCodesDict["Approved"]+=1
-                if tup[0]==14:
-                    statusCodesDict["Other"]+=1
-              
-
-
-            insertQueryWhenNoDuplicate= "\
-             INSERT INTO "+tableName+" (CollectionDate, CaseType, Received,  \
-             ActiveReview, RFEreq, RFErec, IntReady, IntSched, Denied, Approved, Other)   \
-             values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) \
-             where NOT EXISTS(select * from " +tableName+" where CollectionDate=%s and CaseType=%s);"
-             
+        statusCodesDict ={"Received":0, "ActiveReview":0, "RFEreq":0, "RFErec":0, "IntReady":0, "IntSched":0, "Denied":0, "Approved":0, "Other":0}
+        for tup in statusCodesTups:
+            if tup[0]==1:
+                statusCodesDict["Received"]+=1
+            if tup[0]==2:
+                statusCodesDict["ActiveReview"]+=1
+            if tup[0]==3:
+                statusCodesDict["RFEreq"]+=1
+            if tup[0]==4:
+                statusCodesDict["RFErec"]+=1
+            if tup[0]==5:
+                statusCodesDict["IntReady"]+=1
+            if tup[0]==6:
+                statusCodesDict["IntSched"]+=1
+            if tup[0]==7:
+                statusCodesDict["Denied"]+=1
+            if tup[0]==9 or  tup[0]==10 or tup[0]==11 or tup[0]==12 or tup[0]==13 or tup[0]==15:
+                statusCodesDict["Approved"]+=1
+            if tup[0]==14:
+                statusCodesDict["Other"]+=1
             
-                
-            cursor.execute(insertQuery, (now.strftime("%Y-%m-%d"), caseType,
-            statusCodesDict["Received"],statusCodesDict["ActiveReview"], 
-            statusCodesDict["RFEreq"],statusCodesDict["RFErec"],
-            statusCodesDict["IntReady"], statusCodesDict["IntSched"],
-            statusCodesDict["Denied"], statusCodesDict["Approved"], statusCodesDict["Other"],
-            now.strftime("%Y-%m-%d"), caseType))
-            cnx.commit()
+
+
+        insertQueryWhenNoDuplicate= "\
+            INSERT INTO "+tableName+" (CollectionDate, CaseType, Received,  \
+            ActiveReview, RFEreq, RFErec, IntReady, IntSched, Denied, Approved, Other)   \
+            select %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s \
+            where NOT EXISTS(select * from " +tableName+" where CollectionDate=%s and CaseType=%s)"
+            
+        cursor.execute(insertQueryWhenNoDuplicate, (now.strftime("%Y-%m-%d"), caseType,
+        statusCodesDict["Received"],statusCodesDict["ActiveReview"], 
+        statusCodesDict["RFEreq"],statusCodesDict["RFErec"],
+        statusCodesDict["IntReady"], statusCodesDict["IntSched"],
+        statusCodesDict["Denied"], statusCodesDict["Approved"], statusCodesDict["Other"],
+        now.strftime("%Y-%m-%d"), caseType))
+
+        insertQueryWhenDuplicate ="UPDATE "+tableName+" set Received=%s,  \
+            ActiveReview=%s, RFEreq=%s, RFErec=%s, IntReady=%s, IntSched=%s, \
+            Denied=%s, Approved=%s, Other=%s   \
+            where CollectionDate=%s and CaseType=%s"
+        
+
+        cursor.execute(insertQueryWhenDuplicate, (  
+        statusCodesDict["Received"],statusCodesDict["ActiveReview"],  
+        statusCodesDict["RFEreq"],statusCodesDict["RFErec"], 
+        statusCodesDict["IntReady"], statusCodesDict["IntSched"], 
+        statusCodesDict["Denied"], statusCodesDict["Approved"], statusCodesDict["Other"], 
+        now.strftime("%Y-%m-%d"), caseType))
+
+        cnx.commit()
+    cursor.close()
     databaseClose(cnx)
 
 
