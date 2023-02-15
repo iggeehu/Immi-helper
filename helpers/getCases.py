@@ -12,7 +12,7 @@ def shuffledCasesList(rangeId):
     return list
 
 def casesNotUpdatedToday(cursor, rangeId):
-    query="Select CaseNumber from "+rangeId+" WHERE DATE(LastFetched) != DATE(NOW())"
+    query="Select CaseNumber from "+rangeId+" WHERE DATE(LastFetched) != DATE(NOW()) or LastFetched is null"
     cursor.execute(query)
     listTups = cursor.fetchall()
     list=[]
@@ -30,11 +30,11 @@ def casesNeverScanned(cursor, rangeId):
     return list
 
 def OneStepBeforeApprovalAndFresh(cursor, rangeId):
-    query="Select CaseNumber from "+ rangeId +" where StatusCode in (2, 4, 5, 6, 8, 14) and DATE(LastFetched) != DATE(NOW())"
+    query="Select CaseNumber from "+ rangeId +" where (StatusCode in (2, 4, 5, 6, 8, 14) and DATE(LastFetched) <> CURDATE()) or (LastFetched is null)"
     cursor.execute(query)
     list=[]
     for tuple in cursor.fetchall():
-        list.insert(tuple[0])
+        list.append(tuple[0])
     return list
   
     

@@ -1,10 +1,10 @@
 from distutils.log import error
 from xmlrpc.client import DateTime
 
-from helpers.dbOperations import databaseConnect, databaseClose, scrapeSingle
-from helpers.getCases import casesNotUpdatedToday, OneStepBeforeApprovalAndFresh
+from helpers.dbOperations import databaseConnect, databaseClose, scrapeSingle, createRangeLogTable
+from helpers.getCases import casesNotUpdatedToday, OneStepBeforeApprovalAndFresh, casesNeverScanned
 from helpers.conversions import getStatusCode
-from helpers.checks import checkType, isLogUpdatedToday
+from helpers.checks import checkType, isLogUpdatedToday, rangeLogTableExist
 
 
 import numpy
@@ -66,6 +66,7 @@ def dailyScrape(rangeId):
         cursor = cnx.cursor()
         list = OneStepBeforeApprovalAndFresh(cursor,rangeId)
         while len(list)!=0:
+            print(len(list))
             caseNumber = list.pop()
             try:
                         caseResult = scrapeSingle(caseNumber)
@@ -78,16 +79,20 @@ def dailyScrape(rangeId):
                             statusCode = getStatusCode(title)
                             query ="UPDATE " +rangeId+ " SET caseType = %s, statusCode = %s, lastFetched = %s WHERE CaseNumber = %s"
                             cursor.execute(query, (caseType, statusCode, dt_string, caseNumber))
+                            cnx.commit()
 
             except:
                 print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!EXCEPTIONNN")
                 print(numOfTries)
                 sleep(10)
                 dailyScrape(rangeId)
+    cursor.close()
     databaseClose(cnx)
     
 
 def checkAndFillRange(rangeId):
+    if not rangeLogTableExist(rangeId):
+        createRangeLogTable(rangeId)
     cnx = databaseConnect("RangeLog")
     tableName = "R"+rangeId
     cursor = cnx.cursor()
@@ -124,14 +129,23 @@ def checkAndFillRange(rangeId):
                     statusCodesDict["Approved"]+=1
                 if tup[0]==14:
                     statusCodesDict["Other"]+=1
-            insertQuery="INSERT INTO "+tableName+" (CollectionDate, CaseType, Received,  \
-             ActiveReview, RFEreq, RFErec, IntReady, IntSched, Denied, Approved, Other) \
-            Values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+              
+
+
+            insertQueryWhenNoDuplicate= "\
+             INSERT INTO "+tableName+" (CollectionDate, CaseType, Received,  \
+             ActiveReview, RFEreq, RFErec, IntReady, IntSched, Denied, Approved, Other)   \
+             values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) \
+             where NOT EXISTS(select * from " +tableName+" where CollectionDate=%s and CaseType=%s);"
+             
+            
+                
             cursor.execute(insertQuery, (now.strftime("%Y-%m-%d"), caseType,
             statusCodesDict["Received"],statusCodesDict["ActiveReview"], 
             statusCodesDict["RFEreq"],statusCodesDict["RFErec"],
             statusCodesDict["IntReady"], statusCodesDict["IntSched"],
-            statusCodesDict["Denied"], statusCodesDict["Approved"], statusCodesDict["Other"]))
+            statusCodesDict["Denied"], statusCodesDict["Approved"], statusCodesDict["Other"],
+            now.strftime("%Y-%m-%d"), caseType))
             cnx.commit()
     databaseClose(cnx)
 

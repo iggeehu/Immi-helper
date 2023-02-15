@@ -6,8 +6,9 @@ def rangeLogTableExist(rangeId):
     tableName = "R"+rangeId
     if cnx!=None:
         cursor = cnx.cursor()
-        query = "SELECT EXISTS (SELECT "+tableName+" FROM information_schema.TABLES"
-        cursor.execute(query)
+        query = "SELECT count(*) FROM information_schema.TABLES \
+        WHERE (TABLE_SCHEMA = 'RangeLog') AND (TABLE_NAME = %s)"
+        cursor.execute(query, (tableName, ))
         answer = cursor.fetchone()
         if answer==None or answer[0]==0:
             return False
@@ -85,10 +86,15 @@ def rangeTablePopulated(rangeId):
 
 
 def isLogUpdatedToday(cursor, rangeId):
-    tableName = "R" + rangeId
-    query = "select * from "+tableName+" where CollectionDate = CURDATE()" 
-    cursor.execute(query)
-    listTups= cursor.fetchall()
-    if len(listTups)<11:
+    if(rangeLogTableExist(rangeId)):
+        tableName = "R" + rangeId
+        query = "select * from "+tableName+" where CollectionDate = CURDATE()" 
+        cursor.execute(query)
+        listTups= cursor.fetchall()
+        if len(listTups)<11:
+            return False
+        return True
+    else:
         return False
-    return True
+
+

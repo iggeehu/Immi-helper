@@ -49,7 +49,7 @@ def createRangeQueryableTable(rangeId):
 
 
 def createRangeLogTable(rangeId):
-    if rangeLogTableExist(rangeId):
+    if not rangeLogTableExist(rangeId):
         cnx = databaseConnect("RangeLog")
         tableName = "R"+rangeId
         if cnx!=None:
@@ -59,6 +59,12 @@ def createRangeLogTable(rangeId):
                 cursor.execute(query)
             except:
                 print("Creating new table failed")
+        else:
+                 print("db connection failed")
+        cnx.commit()
+        cursor.close()
+        cnx.close()
+
 
 
 
@@ -94,6 +100,37 @@ def populateRangeTable(rangeId):
     else:
         return
 
+def addToDistributionTable(rangeId):
+ 
+        caseTypes = {"I-140":0,"I-765":0,"I-821":0,"I-131":0,"I-129":0,"I-539":0,"I-130":0,"I-90":0,"I-485":0,"N-400":0,"Other":0}
+        cnx = databaseConnect("QueryableCases")
+        cursor = cnx.cursor()
+        
+        for caseType in caseTypes.keys():
+            query="Select count(*) from "+rangeId+ " where caseType=%s"
+            cursor.execute(query, (caseType,))
+            count = cursor.fetchone()[0]
+            print(count)
+            caseTypes[caseType]=count
+            
+        cursor.close()
+        cnx.close()
+     
+        cnx2 = databaseConnect("TypeDistribution")
+        cursor2=cnx2.cursor()
+        query2="INSERT IGNORE INTO TypeDistribution (RangeId) values (%s) "
+        cursor2.execute(query2,(rangeId,))
+        cnx2.commit()
+        query3 = "UPDATE TypeDistribution set I485=%s, I765=%s, I129=%s, \
+            I130=%s, N400=%s, I539=%s, I131=%s, I821=%s, Other=%s, I140=%s, I90=%s \
+            Where RangeId = %s"
+        cursor2.execute(query3, (caseTypes["I-485"],caseTypes["I-765"],
+        caseTypes["I-129"],caseTypes["I-130"],caseTypes["N-400"],
+        caseTypes["I-539"],caseTypes["I-131"],caseTypes["I-821"],
+        caseTypes["Other"],caseTypes["I-140"],caseTypes["I-90"], rangeId))
+        cnx2.commit()
+        cursor2.close()
+        cnx2.close()
 
 
 
