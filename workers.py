@@ -15,19 +15,23 @@ from constants import SAMPLE_SIZE
 
 
 #goal: delete invalid cases from the table that stores the range's queryable cases, populate initial status code
-def weeklyScrape(rangeId):
+def batchScrape(rangeId, frequency = "daily"):
     # print("rangeId from init:" + rangeId)
     cnx=databaseConnect("QueryableCases")
     if cnx!=None:
         cursor = cnx.cursor()
         #as long as there are cases that are not updated today
         #if weeklyscrape is run for the first time, use casesNeverScanned, if for weekly jobs, use casesNotUpdatedToday
-        list=casesNotUpdatedToday(cursor, rangeId)
+        if frequency == "daily":
+            print ("daily called!")
+            list= OneStepBeforeApprovalAndFresh(cursor, rangeId)
+        else:
+            list = casesNotUpdatedToday(cursor, rangeId)
+        
         print(list)
         while len(list) !=0:
             print(len(list))
             caseNumber = list.pop()
-            
             try:
                 caseResult = scrapeSingle(caseNumber)
                 now = datetime.datetime.now()
@@ -36,23 +40,31 @@ def weeklyScrape(rangeId):
                 if caseResult!=None:
                     title=caseResult['title']
                     content=caseResult['content']
-                    caseType = checkType("", content)
                     statusCode = getStatusCode(title)
+                    caseType = checkType("", content)
                     if statusCode in [9, 10, 11, 15] and caseType == "":
                         caseType = "ApprovedUnknown"
                     if statusCode in [14] and caseType=="":
                         caseType = "OtherStatusUnknown"
-                    query ="UPDATE " +rangeId+ " SET caseType = %s, statusCode = %s, lastFetched = %s WHERE CaseNumber = %s"
-                    cursor.execute(query, (caseType, statusCode, dt_string, caseNumber))
+                    #if database has a "I#$%" and caseType is not valid - don't update
+            
+                    query ="UPDATE " +rangeId+ " SET statusCode = %s, lastFetched = %s WHERE CaseNumber = %s"
+                    cursor.execute(query, (statusCode, dt_string, caseNumber))
+
+                    query2 = "UPDATE "+rangeId+ " SET caseType = %s WHERE CaseNumber = %s and caseType not in ('I-140', \
+                        'I-765','I-821','I-131','I-129', 'I-539', 'I-130', 'I-90', 'I-485','N-400', 'I-751', \
+                        'I-824')"
+                    cursor.execute(query2, (caseType, caseNumber))
+                    
                 #an invalid case, only update lastFetched
                 else:
-                    query ="UPDATE " +rangeId+ " SET lastFetched = %s WHERE CaseNumber = %s"
+                    query ="UPDATE " +rangeId+ " SET caseType = 'invalid', lastFetched = %s WHERE CaseNumber = %s"
                     cursor.execute(query, (dt_string, caseNumber))
 
             except:
                 print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!EXCEPTIONNN")
                 sleep(10)
-                weeklyScrape(rangeId)
+                batchScrape(rangeId)
             
                 # sleep(rand(1, 2))
             cnx.commit()
@@ -60,42 +72,10 @@ def weeklyScrape(rangeId):
         
     else:
         print('initial Batch scan failed due to database connection issues')
-        weeklyScrape(rangeId)
+        batchScrape(rangeId)
     databaseClose(cnx)
        
-def dailyScrape(rangeId):    
-    cnx=databaseConnect("QueryableCases")
-    numOfTries=0
-    if cnx!=None:
-        cursor = cnx.cursor()
-        list = OneStepBeforeApprovalAndFresh(cursor,rangeId)
-        while len(list)!=0:
-            print(len(list))
-            caseNumber = list.pop()
-            try:
-                        caseResult = scrapeSingle(caseNumber)
-                        now = datetime.datetime.now()
-                        dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
-                        if caseResult!=None:
-                            title=caseResult['title']
-                            content=caseResult['content']
-                            caseType = checkType("", content)
-                            statusCode = getStatusCode(title)
-                            if statusCode in [9, 10, 11, 15] and caseType == "":
-                                caseType = "ApprovedUnknown"
-                            if statusCode in [14] and caseType=="":
-                                caseType = "OtherStatusUnknown"
-                            query ="UPDATE " +rangeId+ " SET caseType = %s, statusCode = %s, lastFetched = %s WHERE CaseNumber = %s"
-                            cursor.execute(query, (caseType, statusCode, dt_string, caseNumber))
-                            cnx.commit()
 
-            except:
-                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!EXCEPTIONNN")
-                print(numOfTries)
-                sleep(10)
-                dailyScrape(rangeId)
-    cursor.close()
-    databaseClose(cnx)
     
 
 def checkAndFillRange(rangeId):

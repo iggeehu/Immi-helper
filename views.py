@@ -6,7 +6,7 @@ from helpers.conversions import getRangeId, getStatusCode, getRangeText
 from helpers.checks import checkType, rangeExist
 from helpers.dbConnect import databaseClose, databaseConnect
 from Visualizations.caseTypePie import outputPlot
-from workers import weeklyScrape
+from workers import batchScrape
 from rq import Queue, Retry
 from redis import Redis
 from bokeh.embed import components
@@ -72,12 +72,12 @@ def handle_data():
         createRangeJob = init.enqueue('helpers.dbOperations.createRangeQueryableTable', rangeId)
         populateRangeJob=init.enqueue('helpers.dbOperations.populateRangeTable', rangeId, retry=Retry(max=10, interval=10), 
         depends_on=createRangeJob, job_timeout='24h')
-        initScrapeJob = init.enqueue('workers.weeklyScrape', rangeId, retry=Retry(max=10, interval=10), depends_on=populateRangeJob)
+        initScrapeJob = init.enqueue('workers.batchScrape', rangeId, retry=Retry(max=10, interval=10), depends_on=populateRangeJob)
         addToDistributionTableJob=init.enqueue('helpers.dbOperations.addToDistributionTable', rangeId, retry=Retry(max=10, interval=10), depends_on=initScrapeJob)
         createRangeLogTableJob=init.enqueue('helpers.dbOperations.createRangeLogTable', rangeId, retry=Retry(max=10, interval=10), depends_on=initScrapeJob)
         return render_template("checkBacklater.html")
     else:
-        dailyScrapeJob = init.enqueue('workers.weeklyScrape', rangeId, retry=Retry(max=10, interval=10),job_timeout='24h')
+        dailyScrapeJob = init.enqueue('workers.batchScrape', args=(rangeId,), kwargs={"frequency": "daily"}, retry=Retry(max=10, interval=10),job_timeout='24h')
         createRangeLogTableJob = init.enqueue('helpers.dbOperations.createRangeLogTable', rangeId, retry=Retry(max=10, interval=10))
         checkAndFillRangeLogJob = init.enqueue('workers.checkAndFillRange', rangeId, retry=Retry(max=10, interval=10), depends_on=createRangeLogTableJob)
         addToDistributionTable(rangeId)

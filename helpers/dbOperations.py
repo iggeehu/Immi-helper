@@ -74,8 +74,8 @@ def populateRangeTable(rangeId):
         if cnx!=None:
             case_stub = getCasePrefix(rangeId)+rangeId[1:7]
             cursor = cnx.cursor()
-
-            base=0 if rangeId[7]==0 else 5000
+           
+            base=0 if rangeId[7]=="0" else 5000
             addOn = 0
             while (addOn<5000):
                 
@@ -85,6 +85,7 @@ def populateRangeTable(rangeId):
                     copy=str(0)+copy
                     i+=1
                 caseNumber = case_stub + copy
+                print(caseNumber)
                 try:
                     query = ("INSERT INTO " +rangeId + " (CaseNumber) values (%s)")
                     cursor.execute(query,(caseNumber,))
