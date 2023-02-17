@@ -102,25 +102,23 @@ def populateRangeTable(rangeId):
 
 def addToDistributionTable(rangeId):
  
-        caseTypes = {"I-140":0,"I-765":0,"I-821":0,"I-131":0,"I-129":0,"I-539":0,"I-130":0,"I-90":0,"I-485":0,"N-400":0, "I-751":0, "I-824":0, "Other":0}
+        caseTypes = {"I-140":0,"I-765":0,"I-821":0,"I-131":0,"I-129":0,"I-539":0,"I-130":0,"I-90":0,"I-485":0,"N-400":0, "I-751":0, "I-824":0, "Approv":0, "OtherS":0}
         cnx = databaseConnect("QueryableCases")
         cursor = cnx.cursor()
         
         for caseType in caseTypes.keys():
 
-            if caseType != "Other":
-                query="Select count(*) from "+rangeId+ " where caseType=%s"
-                cursor.execute(query, (caseType,))
-            else:
-                query="Select count(*) from "+rangeId+ " where caseType='' or caseType is null"
-                cursor.execute(query)
-            
-            print("Adding to distributino")
+            query="Select count(*) from "+rangeId+ " where caseType=%s"
+            cursor.execute(query, (caseType,))
+           
             count = cursor.fetchone()[0]
-            print(count)
             caseTypes[caseType]=count
-                
-            
+        
+        caseTypes["Invalid"]=0
+        query = "Select count(*) from "+rangeId+ " where caseType is null"
+        cursor.execute(query)
+        caseTypes["Invalid"]=cursor.fetchone()[0]
+
         cursor.close()
         cnx.close()
      
@@ -130,13 +128,15 @@ def addToDistributionTable(rangeId):
         cursor2.execute(query2,(rangeId,))
         cnx2.commit()
         query3 = "UPDATE TypeDistribution set I485=%s, I765=%s, I129=%s, \
-            I130=%s, N400=%s, I539=%s, I131=%s, I821=%s, Other=%s, I140=%s, I90=%s, I751=%s, I824=%s \
+            I130=%s, N400=%s, I539=%s, I131=%s, I821=%s, I140=%s, I90=%s, I751=%s, I824=%s, \
+            InvalidCases=%s, ApprovedAndUnknown=%s, OtherStatusAndUnknown=%s    \
             Where RangeId = %s"
         cursor2.execute(query3, (caseTypes["I-485"],caseTypes["I-765"],
         caseTypes["I-129"],caseTypes["I-130"],caseTypes["N-400"],
         caseTypes["I-539"],caseTypes["I-131"],caseTypes["I-821"],
-        caseTypes["Other"],caseTypes["I-140"],caseTypes["I-90"], 
-        caseTypes["I-751"], caseTypes["I-824"], rangeId))
+        caseTypes["I-140"],caseTypes["I-90"], 
+        caseTypes["I-751"], caseTypes["I-824"], caseTypes["Invalid"],
+        caseTypes["Approv"], caseTypes["OtherS"], rangeId))
         cnx2.commit()
         cursor2.close()
         cnx2.close()

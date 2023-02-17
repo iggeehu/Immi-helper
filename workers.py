@@ -38,6 +38,10 @@ def weeklyScrape(rangeId):
                     content=caseResult['content']
                     caseType = checkType("", content)
                     statusCode = getStatusCode(title)
+                    if statusCode in [9, 10, 11, 15] and caseType == "":
+                        caseType = "ApprovedUnknown"
+                    if statusCode in [14] and caseType=="":
+                        caseType = "OtherStatusUnknown"
                     query ="UPDATE " +rangeId+ " SET caseType = %s, statusCode = %s, lastFetched = %s WHERE CaseNumber = %s"
                     cursor.execute(query, (caseType, statusCode, dt_string, caseNumber))
                 #an invalid case, only update lastFetched
@@ -77,6 +81,10 @@ def dailyScrape(rangeId):
                             content=caseResult['content']
                             caseType = checkType("", content)
                             statusCode = getStatusCode(title)
+                            if statusCode in [9, 10, 11, 15] and caseType == "":
+                                caseType = "ApprovedUnknown"
+                            if statusCode in [14] and caseType=="":
+                                caseType = "OtherStatusUnknown"
                             query ="UPDATE " +rangeId+ " SET caseType = %s, statusCode = %s, lastFetched = %s WHERE CaseNumber = %s"
                             cursor.execute(query, (caseType, statusCode, dt_string, caseNumber))
                             cnx.commit()
@@ -98,22 +106,21 @@ def checkAndFillRange(rangeId):
     cursor = cnx.cursor()
     now = datetime.datetime.now()
    
-    caseTypes = {"I-140":0,"I-765":0,"I-821":0,"I-131":0,"I-129":0,"I-539":0,"I-130":0,"I-90":0,"I-485":0,"N-400":0,"I-751":0, "I-824":0, "Other":0}
+    caseTypes = {"I-140":0,"I-765":0,"I-821":0,"I-131":0,"I-129":0,"I-539":0,"I-130":0,"I-90":0,"I-485":0,"N-400":0,"I-751":0, "I-824":0, "Approv":0, "OtherS":0}
 
     for caseType in caseTypes.keys():
         cnx2=databaseConnect("QueryableCases")
-        cursor2=cnx2.cursor()
-        if caseType!="Other":
-            query="Select StatusCode from "+rangeId+" where CaseType=%s"
-            cursor2.execute(query, (caseType,))
-        else:
-            query="Select StatusCode from "+rangeId+" where CaseType='' or CaseType is null"
-            cursor2.execute(query)
+        cursor2=cnx2.cursor()    
+        query="Select StatusCode from "+rangeId+" where CaseType=%s"
+        cursor2.execute(query, (caseType,))
+        
         statusCodesTups = cursor2.fetchall()
         cursor2.close()
         cnx2.close()
 
-        statusCodesDict ={"Received":0, "ActiveReview":0, "RFEreq":0, "RFErec":0, "IntReady":0, "IntSched":0, "Denied":0, "Approved":0, "Other":0}
+        statusCodesDict ={"Received":0, "ActiveReview":0, "RFEreq":0, 
+        "RFErec":0, "IntReady":0, "IntSched":0, "Denied":0, 
+        "Approved":0, "Other":0}
         for tup in statusCodesTups:
             if tup[0]==1:
                 statusCodesDict["Received"]+=1
@@ -135,7 +142,7 @@ def checkAndFillRange(rangeId):
                 statusCodesDict["Other"]+=1
             
 
-
+        # initial insert unless today's already filled
         insertQueryWhenNoDuplicate= "\
             INSERT INTO "+tableName+" (CollectionDate, CaseType, Received,  \
             ActiveReview, RFEreq, RFErec, IntReady, IntSched, Denied, Approved, Other)   \
@@ -149,6 +156,7 @@ def checkAndFillRange(rangeId):
         statusCodesDict["Denied"], statusCodesDict["Approved"], statusCodesDict["Other"],
         now.strftime("%Y-%m-%d"), caseType))
 
+        #if filled, update
         insertQueryWhenDuplicate ="UPDATE "+tableName+" set Received=%s,  \
             ActiveReview=%s, RFEreq=%s, RFErec=%s, IntReady=%s, IntSched=%s, \
             Denied=%s, Approved=%s, Other=%s   \

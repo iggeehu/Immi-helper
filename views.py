@@ -2,13 +2,14 @@ from flask import Blueprint, render_template, request, redirect, url_for
 from bs4 import BeautifulSoup as bs
 
 from helpers.dbOperations import scrapeSingle, createRangeLogTable, addToDistributionTable
-from helpers.conversions import getRangeId, getStatusCode
+from helpers.conversions import getRangeId, getStatusCode, getRangeText
 from helpers.checks import checkType, rangeExist
 from helpers.dbConnect import databaseClose, databaseConnect
-from Visualizations.caseTypePie import DistributionData, script, div
+from Visualizations.caseTypePie import outputPlot
 from workers import weeklyScrape
 from rq import Queue, Retry
 from redis import Redis
+from bokeh.embed import components
 # from Visualizations.caseTypePie import script, div
 
 
@@ -84,8 +85,11 @@ def handle_data():
 
 @views.route('/caseData/<rangeId>', methods=['GET'])
 def caseData(rangeId):
-    DistributionData(rangeId)
-    return render_template("caseData.html", rangeId=rangeId, script=script, div=div)
+    script, (divBar, divTable) = outputPlot(rangeId)
+    print(script)
+    print(divBar)
+    print(divTable)
+    return render_template("caseData.html", rangeText=getRangeText(rangeId), script=script, divBar=divBar, divTable=divTable)
 
     
    

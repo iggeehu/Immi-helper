@@ -61,3 +61,11 @@ def getStatusText(status_code):
                     15: "New Card Is Being Produced"
                     }
     return status_types.get(status_code)
+
+def getRangeText(rangeId):
+    casePrefix = getCasePrefix(rangeId)
+    caseMiddle = rangeId[1:7]
+    caseTailBegin = 0000 if rangeId[7] ==0 else 5000
+    caseTailEnd = caseTailBegin + 4999
+
+    return casePrefix+caseMiddle+str(caseTailBegin) + "-" + casePrefix+caseMiddle+str(caseTailEnd)

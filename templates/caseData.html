@@ -4,19 +4,46 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/caseData.css') }}">
+    
+
     <title>Document</title>
+    <script src="https://cdn.bokeh.org/bokeh/release/bokeh-3.0.0.min.js"
+    crossorigin="anonymous"></script>
+<script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-3.0.0.min.js"
+    crossorigin="anonymous"></script>
+<script src="https://cdn.bokeh.org/bokeh/release/bokeh-tables-3.0.0.min.js"
+    crossorigin="anonymous"></script>
+<script src="https://cdn.bokeh.org/bokeh/release/bokeh-gl-3.0.0.min.js"
+    crossorigin="anonymous"></script>
+<script src="https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-3.0.0.min.js"
+    crossorigin="anonymous"></script>
     {{script | safe}}
-    <script src="https://cdn.bokeh.org/bokeh/release/bokeh-3.0.0.min.js" 
-    crossorigin="anonymous">
-    {{script}}
-    </script>
 </head>
 <body>
     
-<h1>Data Insight For Case Range: {{rangeId}} </h1>
-
-    {{div | safe}}
+<h1>Data Insight For Case Range: {{rangeText}} </h1>
+<p>Last Updated: </p>
+<h2>Numbers of Petition Types In Range of 5000</h2>
+<div id="distbar" class="dist">
+    <div id="distGraph" class="distChild">
+    {{divBar | safe}}
+    </div>
+    <div id="distTable" class="distChild">
+        <div id="distTableBody" class="distChild2"> 
+        {{divTable | safe}}
+        </div>
+        <div id="distWords" class="distChild2">
+            <p>Note:"Approved Unknown" are cases that are approved, 
+            the types of which are unknownable. "Other Unknown" 
+            might belong to a less common petition type, like 
+            I-290, or status, like case rejected due to incorrect 
+            fee payment. "Invalids" mean there is no case behind 
+            a certain case number. </p>
+        </div>
+    </div>
+   
+</div>
 
    
 
