@@ -31,7 +31,7 @@ def getStatusCode(resultTitle):
         return 7
     if "Case Was Updated" in resultTitle:
         return 8
-    if "Case Was Approved" in resultTitle:
+    if "Case Was Approved" in resultTitle or "Benefit Received By Other Means" in resultTitle:
         return 9
     if "Picked Up" in resultTitle:
         return 10

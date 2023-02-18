@@ -28,6 +28,12 @@
 <body>
     
 <h1>IMMIGENCE: Your USCIS case status & data insights</h1>
+    <ul class = 'navBar'>
+        <li class = 'navItem'><a href="{{url_for('views.home')}}">Home</a></li>
+        <li class = 'navItem'><a href="{{url_for('views.invalid')}}">About</a></li>
+        <li class = 'navItem'><a href="">Community</a></li>
+    </ul> 
+
     <form action="{{ url_for('views.handle_data') }}" method="post" name="user_submission" class="form-style-8" onSubmit="return passCheck()">
 
         <label for='case_number'>Type in your case number to query your case range data:</label>

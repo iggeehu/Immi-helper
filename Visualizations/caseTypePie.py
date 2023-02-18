@@ -1,4 +1,4 @@
-from math import pi
+
 
 import pandas as pd
 from bokeh.embed import components
@@ -29,29 +29,32 @@ def getDistributionData(rangeId):
             continue
         result[listOfKeys.pop()]=value
 
-    
+    cursor.close()
+    cnx.close()
     return result
 
 def outputPlot(rangeId):
     result = getDistributionData(rangeId)
     keys=list(result.keys())
     values=list(result.values())
+  
 
-    source = ColumnDataSource(data=dict(keys=keys, values=values, color=Bright7))
-    
     sorted_keys = sorted(keys, key=lambda x: values[keys.index(x)])
-    p = figure(x_range=sorted_keys, height=350, title="Case Type",
-            toolbar_location=None, tools="")
-    p.vbar(x="keys", top="values", width=0.9, color='color', source=source)
+
+    p = figure(x_range=sorted_keys, height=350, title="Number Per Case Type",
+           toolbar_location=None, tools="")
+    p.vbar(x=keys, top=values, width=0.9)
     p.xgrid.grid_line_color = None
     p.y_range.start = 0
+
 
     columns = [
             TableColumn(field="keys", title="Case Type"),
             TableColumn(field="values", title="Number"),
         ]
+    
+    source = ColumnDataSource(data=dict(keys=keys, values=values))
     data_table = DataTable(source=source, columns=columns, width=400, height=280, sortable=True)
 
     # script, div = 
-    return components((p, data_table))
- 
+    return (p, data_table)

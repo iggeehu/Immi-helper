@@ -15,13 +15,11 @@ from constants import SAMPLE_SIZE
 
 
 #goal: delete invalid cases from the table that stores the range's queryable cases, populate initial status code
-def batchScrape(rangeId, frequency = "daily"):
+def batchScrape(rangeId, frequency:str = "daily"):
     # print("rangeId from init:" + rangeId)
     cnx=databaseConnect("QueryableCases")
     if cnx!=None:
         cursor = cnx.cursor()
-        #as long as there are cases that are not updated today
-        #if weeklyscrape is run for the first time, use casesNeverScanned, if for weekly jobs, use casesNotUpdatedToday
         if frequency == "daily":
             print ("daily called!")
             list= OneStepBeforeApprovalAndFresh(cursor, rangeId)

@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for
 from bs4 import BeautifulSoup as bs
+from Visualizations.perCaseType.statusLineGraph import outputStatusLineGraph
 
 from helpers.dbOperations import scrapeSingle, createRangeLogTable, addToDistributionTable
 from helpers.conversions import getRangeId, getStatusCode, getRangeText
@@ -9,7 +10,9 @@ from Visualizations.caseTypePie import outputPlot
 from workers import batchScrape
 from rq import Queue, Retry
 from redis import Redis
+from constants import CASE_TYPES
 from bokeh.embed import components
+
 # from Visualizations.caseTypePie import script, div
 
 
@@ -20,6 +23,14 @@ views = Blueprint(__name__, "views")
 @views.route("/")
 def home():
     return render_template("home.html")
+
+@views.route("/about")
+def aboutThisSite():
+    return render_template("about.html")
+
+@views.route("/community")
+def about():
+    return render_template("community.html")
 
 @views.route("/invalid")
 def invalid():
@@ -85,19 +96,22 @@ def handle_data():
 
 @views.route('/caseData/<rangeId>', methods=['GET'])
 def caseData(rangeId):
-    script, (divBar, divTable) = outputPlot(rangeId)
-    print(script)
-    print(divBar)
-    print(divTable)
-    return render_template("caseData.html", rangeText=getRangeText(rangeId), script=script, divBar=divBar, divTable=divTable)
-
-    
+    distGraph, dataTable = outputPlot(rangeId)
+    statusGraphDict = outputStatusLineGraph(rangeId)
+    script, divTups = components((distGraph, dataTable, *statusGraphDict.values()))
+    divDist = divTups[0]
+    divTable = divTups[1]
+    caseTypeDivs = divTups[2:]
+    DivDicts = {}
+    i=0
+    for key in statusGraphDict.keys():
+        statusGraphDict[key]=caseTypeDivs[i]
+        i+=1
+    return render_template("caseData.html", rangeText=getRangeText(rangeId), 
+    script = script, divDist = divDist, divTable = divTable, statusGraphDict=statusGraphDict)
+     
    
-    
-    # outputRaw = pullFromDb(rangeId)
-    # outputCharts = visualizationApi(outputRaw)
-   
 
 
-    return render_template("home.html")
+ 
 
