@@ -21,12 +21,10 @@ def batchScrape(rangeId, frequency:str = "daily"):
     if cnx!=None:
         cursor = cnx.cursor()
         if frequency == "daily":
-            print ("daily called!")
             list= OneStepBeforeApprovalAndFresh(cursor, rangeId)
         else:
             list = casesNotUpdatedToday(cursor, rangeId)
         
-        print(list)
         while len(list) !=0:
             print(len(list))
             caseNumber = list.pop()
@@ -36,23 +34,42 @@ def batchScrape(rangeId, frequency:str = "daily"):
                 dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
                 #not an invalid case
                 if caseResult!=None:
-                    title=caseResult['title']
-                    content=caseResult['content']
-                    statusCode = getStatusCode(title)
-                    caseType = checkType("", content)
-                    if statusCode in [9, 10, 11, 15] and caseType == "":
-                        caseType = "ApprovedUnknown"
-                    if statusCode in [14] and caseType=="":
-                        caseType = "OtherStatusUnknown"
-                    #if database has a "I#$%" and caseType is not valid - don't update
-            
-                    query ="UPDATE " +rangeId+ " SET statusCode = %s, lastFetched = %s WHERE CaseNumber = %s"
-                    cursor.execute(query, (statusCode, dt_string, caseNumber))
+                    #get scrape result
+                    newTitle=caseResult['title']
+                    newContent=caseResult['content']
+                    newStatusCode = getStatusCode(newTitle)
+                    newCaseType = checkType("", newContent)
 
-                    query2 = "UPDATE "+rangeId+ " SET caseType = %s WHERE CaseNumber = %s and caseType not in ('I-140', \
-                        'I-765','I-821','I-131','I-129', 'I-539', 'I-130', 'I-90', 'I-485','N-400', 'I-751', \
-                        'I-824')"
-                    cursor.execute(query2, (caseType, caseNumber))
+                    #if new statusCode is approved and no type scraped, set "ApprovedUnknown" etc
+                    if newStatusCode in [9, 10, 11, 15] and newCaseType == "":
+                        newCaseType = "ApprovedUnknown"
+                    if newStatusCode in [14] and newCaseType=="":
+                        newCaseType = "OtherStatusUnknown"
+
+                    #before updating, get the case's current status and caseType
+                    dbQuery = "select caseType, statusCode from "+rangeId+" where caseNumber = %s"
+                    cursor.execute(dbQuery, (caseNumber,))
+                    dbTup = cursor.fetchone()
+                    
+                    if dbTup!=None and dbTup[0]!=0:
+                        currType = dbTup[0]
+                        currStatusCode = dbTup[1]
+                        if currStatusCode not in [9, 10, 11, 15] and newStatusCode in [9, 10, 11, 15]:
+                            # add to "approvedtoday database"
+                            print("!!!!!!!!!!!NEW APPROVED CASE "+ caseNumber + "WOOHOO!!!!!!!!!!!!!!!!!!!!!!!!")
+                            cnx2approved = databaseConnect("ApprovedCasesToday")
+                            cursor2approved = cnx2approved.cursor()
+                            addQuery = "INSERT INTO ApprovedCasesToday (CaseNumber, CaseType, ApprovalTime) values (%s, %s, %s)"
+                            cursor2approved.execute(addQuery, (caseNumber, currType, now.strftime("%Y-%m-%d")))
+                            cnx2approved.commit()
+                            cursor2approved.close()
+                            cnx2approved.close()
+                            newCaseType = currType
+
+            
+                    query ="UPDATE " +rangeId+ " SET statusCode = %s, lastFetched = %s, caseType = %s, WHERE CaseNumber = %s"
+                    cursor.execute(query, (newStatusCode, dt_string, newCaseType, caseNumber))
+
                     
                 #an invalid case, only update lastFetched
                 else:
