@@ -28,58 +28,59 @@ def batchScrape(rangeId, frequency:str = "daily"):
         while len(list) !=0:
             print(len(list))
             caseNumber = list.pop()
-            try:
-                caseResult = scrapeSingle(caseNumber)
-                now = datetime.datetime.now()
-                dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
-                #not an invalid case
-                if caseResult!=None:
-                    #get scrape result
-                    newTitle=caseResult['title']
-                    newContent=caseResult['content']
-                    newStatusCode = getStatusCode(newTitle)
-                    newCaseType = checkType("", newContent)
+            # try:
+            caseResult = scrapeSingle(caseNumber)
+            now = datetime.datetime.now()
+            dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
+            #not an invalid case
+            if caseResult!=None:
+                #get scrape result
+                newTitle=caseResult['title']
+                newContent=caseResult['content']
+                newStatusCode = getStatusCode(newTitle)
+                newCaseType = checkType("", newContent)
+              
+                #if new statusCode is approved and no type scraped, set "ApprovedUnknown" etc
+                if newStatusCode in [9, 10, 11, 15] and newCaseType == "":
+                    newCaseType = "ApprovedUnknown"
+                if newStatusCode in [14] and newCaseType=="":
+                    newCaseType = "OtherStatusUnknown"
 
-                    #if new statusCode is approved and no type scraped, set "ApprovedUnknown" etc
-                    if newStatusCode in [9, 10, 11, 15] and newCaseType == "":
-                        newCaseType = "ApprovedUnknown"
-                    if newStatusCode in [14] and newCaseType=="":
-                        newCaseType = "OtherStatusUnknown"
+                #before updating, get the case's current status and caseType
+                dbQuery = "select caseType, statusCode from "+rangeId+" where caseNumber = %s"
+                cursor.execute(dbQuery, (caseNumber,))
+                dbTup = cursor.fetchone()
 
-                    #before updating, get the case's current status and caseType
-                    dbQuery = "select caseType, statusCode from "+rangeId+" where caseNumber = %s"
-                    cursor.execute(dbQuery, (caseNumber,))
-                    dbTup = cursor.fetchone()
-                    
-                    if dbTup!=None and dbTup[0]!=0:
-                        currType = dbTup[0]
-                        currStatusCode = dbTup[1]
-                        if currStatusCode not in [9, 10, 11, 15] and newStatusCode in [9, 10, 11, 15]:
-                            # add to "approvedtoday database"
-                            print("!!!!!!!!!!!NEW APPROVED CASE "+ caseNumber + "WOOHOO!!!!!!!!!!!!!!!!!!!!!!!!")
-                            cnx2approved = databaseConnect("ApprovedCasesToday")
-                            cursor2approved = cnx2approved.cursor()
-                            addQuery = "INSERT INTO ApprovedCasesToday (CaseNumber, CaseType, ApprovalTime) values (%s, %s, %s)"
-                            cursor2approved.execute(addQuery, (caseNumber, currType, now.strftime("%Y-%m-%d")))
-                            cnx2approved.commit()
-                            cursor2approved.close()
-                            cnx2approved.close()
-                            newCaseType = currType
+                
+                if dbTup!=None and dbTup[0]!=None:
+                    currType = dbTup[0]
+                    currStatusCode = dbTup[1]
+                    if currStatusCode not in [9, 10, 11, 15] and newStatusCode in [9, 10, 11, 15]:
+                        # add to "approvedtoday database"
+                        print("!!!!!!!!!!!NEW APPROVED CASE "+ caseNumber + "WOOHOO!!!!!!!!!!!!!!!!!!!!!!!!")
+                        cnx2approved = databaseConnect("ApprovedCasesToday")
+                        cursor2approved = cnx2approved.cursor()
+                        addQuery = "INSERT INTO ApprovedCasesToday (CaseNumber, CaseType, ApprovalTime) values (%s, %s, %s)"
+                        cursor2approved.execute(addQuery, (caseNumber, currType, now.strftime("%Y-%m-%d")))
+                        cnx2approved.commit()
+                        cursor2approved.close()
+                        cnx2approved.close()
+                        newCaseType = currType
 
-            
-                    query ="UPDATE " +rangeId+ " SET statusCode = %s, lastFetched = %s, caseType = %s, WHERE CaseNumber = %s"
-                    cursor.execute(query, (newStatusCode, dt_string, newCaseType, caseNumber))
+        
+                query ="UPDATE " +rangeId+ " SET statusCode = %s, lastFetched = %s, caseType = %s WHERE CaseNumber = %s"
+                cursor.execute(query, (newStatusCode, dt_string, newCaseType, caseNumber))
 
-                    
-                #an invalid case, only update lastFetched
-                else:
-                    query ="UPDATE " +rangeId+ " SET caseType = 'invalid', lastFetched = %s WHERE CaseNumber = %s"
-                    cursor.execute(query, (dt_string, caseNumber))
+                
+            #an invalid case, only update lastFetched
+            else:
+                query ="UPDATE " +rangeId+ " SET caseType = 'invalid', lastFetched = %s WHERE CaseNumber = %s"
+                cursor.execute(query, (dt_string, caseNumber))
 
-            except:
-                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!EXCEPTIONNN")
-                sleep(10)
-                batchScrape(rangeId)
+            # except:
+            #     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!EXCEPTIONNN")
+            #     sleep(10)
+            #     batchScrape(rangeId)
             
                 # sleep(rand(1, 2))
             cnx.commit()
