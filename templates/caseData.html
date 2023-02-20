@@ -22,61 +22,63 @@
 
 </head>
 <body>
-    
-<h1>Data Insight For Case Range: {{rangeText}} </h1>
-<p>Last Updated: </p>
-<h2>Numbers of Petition Types In Range of 5000</h2>
-<div id="distbar" class="dist">
-    <div id="distGraph" class="distChild">
-    {{divDist | safe}}
-    </div>
-    <div id="distTable" class="distChild">
-        <div id="distTableBody" class="distChild2"> 
-        {{divTable | safe}}
-        </div>
-        <div id="distWords" class="distChild2">
-            <p>Note:"Approved Unknown" are cases that are approved, 
-            the types of which are unknownable. "Other Unknown" 
-            might belong to a less common petition type, like 
-            I-290, or status, like case rejected due to incorrect 
-            fee payment. "Invalids" mean there is no case behind 
-            a certain case number. </p>
-        </div>
-    </div>
-</div>
-
-
-
-<div class="wrapper">
-    <div class="tabs">
-        {%for caseType in statusGraphDict.keys()%}
-        <div class="tab">
-            <input type="radio" name="css-tabs" id="{{caseType}}" checked class="tab-switch">
-            <label for="{{caseType}}" class="tab-label">{{caseType}}</label>
-            <div class="tab-content">{{statusGraphDict[caseType] | safe}}</div>
+    <nav id="navbar" class="">
+        <div class="nav-wrapper">
+          <div class="logo">
+            <a href="#home"><i class="fa fa-angellist"></i>IMMIGENCE: Your USCIS insights</a>
           </div>
-        {%endfor%}
-      <!-- <div class="tab">
-        <input type="radio" name="css-tabs" id="tab-1" checked class="tab-switch">
-        <label for="tab-1" class="tab-label">Tab One</label>
-        <div class="tab-content">My father had a small estate in Nottinghamshire: I was the third of five sons. He sent me to Emanuel College in Cambridge at fourteen years old, where I resided three years, and applied myself close to my studies; but the charge of maintaining me, although I had a very scanty allowance, being too great for a narrow fortune, I was bound apprentice to Mr. James Bates, an eminent surgeon in London, with whom I continued four years. </div>
-      </div>
-      <div class="tab">
-        <input type="radio" name="css-tabs" id="tab-2" class="tab-switch">
-        <label for="tab-2" class="tab-label">Tab Two</label>
-        <div class="tab-content">My father now and then sending me small sums of money, I laid them out in learning navigation, and other parts of the mathematics, useful to those who intend to travel, as I always believed it would be, some time or other, my fortune to do. </div>
-      </div>
-      <div class="tab">
-        <input type="radio" name="css-tabs" id="tab-3" class="tab-switch">
-        <label for="tab-3" class="tab-label">Tab Three</label>
-        <div class="tab-content">When I left Mr. Bates, I went down to my father: where, by the assistance of him and my uncle John, and some other relations, I got forty pounds, and a promise of thirty pounds a year to maintain me at Leyden: there I studied physic two years and seven months, knowing it would be useful in long voyages.</div>
-      </div> -->
-    </div>
-    <p>Example line outside of tab box</p>
-  </div>
-  
-  
+          <ul id="menu">
+            <li><a href="{{url_for('views.home')}}">Home</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="{{url_for('views.invalid')}}"">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+      </nav>    
+      
+    <div id="realBody">
+        <h2>Data Insight For Case Range: {{rangeText}} </h1>
+        <p>Last Updated: </p>
+        <h3>Numbers for Each Petition Type In Range of 5000</h3>
+        <div id="distbar" class="dist">
+            <div id="distGraph" class="distChild">
+            {{divDist | safe}}
+            </div>
+            <div id="distTable" class="distChild">
+                <div id="distTableBody" class="distChild2"> 
+                {{divTable | safe}}
+                </div>
+                <div id="distWords" class="distChild2">
+                    <p>Note:"Approved Unknown" are cases that are approved, 
+                    the types of which are unknownable. "Other Unknown" 
+                    might belong to a less common petition type, like 
+                    I-290, or status, like case rejected due to incorrect 
+                    fee payment. "Invalids" mean there is no case behind 
+                    a certain case number. </p>
+                </div>
+            </div>
+        </div>
 
+        <h2>Approved Cases By Date</h2>
+        <div class="approvedCasesLog">
+
+        </div>
+
+        <h3>Status Trend for Each Petition Type</h3>
+        <div class="wrapper statusPerType">
+            <div class="tabs">
+                {%for caseType in statusGraphDict.keys()%}
+                <div class="tab">
+                    <input type="radio" name="css-tabs" id="{{caseType}}" checked class="tab-switch">
+                    <label for="{{caseType}}" class="tab-label">{{caseType}}</label>
+                    <div class="tab-content">{{statusGraphDict[caseType] | safe}}</div>
+                </div>
+                {%endfor%}
+            </div>
+            <p>Example line outside of tab box</p>
+        </div>
+    
+    </div>
     
 </body>
 </html>

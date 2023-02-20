@@ -4,11 +4,25 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
     <title>Document</title>
 </head>
 <body>
-    
-<h1>We have included your case range (of 5000 cases) in data collection, check back 24 hours later!</h1>
+    <nav id="navbar" class="">
+        <div class="nav-wrapper">
+          <div class="logo">
+            <a href="#home"><i class="fa fa-angellist"></i>IMMIGENCE: Your USCIS insights</a>
+          </div>
+          <ul id="menu">
+            <li><a href="{{url_for('views.home')}}">Home</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="{{url_for('views.invalid')}}"">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+      </nav>
+      
+    <h1>We have included your case range (of 5000 cases) in data collection, check back 24 hours later!</h1>
     
     
 </body>

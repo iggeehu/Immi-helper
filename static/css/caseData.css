@@ -1,4 +1,4 @@
-
+@import "navbar.css";
 @import "compass/css3";
 @import url("https://fonts.googleapis.com/css?family=Lato");
 
@@ -48,7 +48,7 @@ margin: 0 auto;
 .tabs {
 position: relative;
 margin: 3rem 0;
-background: #1abc9c;
+background: #6a7ac4;
 height: 14.75rem;
 }
 .tabs::before,
@@ -71,7 +71,7 @@ display: block;
 line-height: 2.75em;
 height: 3em;
 padding: 0 1.618em;
-background: #1abc9c;
+background: #6a7ac4;
 border-right: 0.125rem solid #16a085;
 color: #fff;
 cursor: pointer;

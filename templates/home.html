@@ -6,35 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
     <title>Document</title>
-    <script>
-    //     function passCheck(){
-    //     console.log("passcheck")
-    //     var case_number = document.getElementById('case_number').value;
-    //     var petition_date = document.getElementById('petition_date').value;
-
-    //     if(case_number != "" && petition_date!=""){
-    //     console.log("true")
-    //     return true;
-    // }
-    // else{
-    //     alert("Case_number and petition_date are required.");
-    //     console.log("false")
-    //     return false;
-    // }
-}
-
-    </script>
+    <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+  
+    
 </head>
 <body>
-    
-<h1>IMMIGENCE: Your USCIS case status & data insights</h1>
-    <ul class = 'navBar'>
-        <li class = 'navItem'><a href="{{url_for('views.home')}}">Home</a></li>
-        <li class = 'navItem'><a href="{{url_for('views.invalid')}}">About</a></li>
-        <li class = 'navItem'><a href="">Community</a></li>
-    </ul> 
+    <nav id="navbar" class="">
+        <div class="nav-wrapper">
+          <div class="logo">
+            <a href="#home"><i class="fa fa-angellist"></i>IMMIGENCE: Your USCIS insights</a>
+          </div>
+          <ul id="menu">
+            <li><a href="{{url_for('views.home')}}">Home</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="{{url_for('views.invalid')}}"">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+      </nav>
 
-    <form action="{{ url_for('views.handle_data') }}" method="post" name="user_submission" class="form-style-8" onSubmit="return passCheck()">
+    <form action="{{ url_for('views.handle_data') }}" method="post" name="user_submission" class="form-style-8">
 
         <label for='case_number'>Type in your case number to query your case range data:</label>
             <input type='text' id='case_number' name='case_number' required>
