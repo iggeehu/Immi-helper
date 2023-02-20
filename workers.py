@@ -2,7 +2,7 @@ from distutils.log import error
 from xmlrpc.client import DateTime
 
 from helpers.dbOperations import databaseConnect, databaseClose, scrapeSingle, createRangeLogTable
-from helpers.getCases import casesNotUpdatedToday, OneStepBeforeApprovalAndFresh, casesNeverScanned
+from helpers.getCases import casesNotUpdatedToday, NearApprovalAndFreshOrUnscanned, casesNeverScanned
 from helpers.conversions import getStatusCode
 from helpers.checks import checkType, isLogUpdatedToday, rangeLogTableExist
 
@@ -21,7 +21,7 @@ def batchScrape(rangeId, frequency:str = "daily"):
     if cnx!=None:
         cursor = cnx.cursor()
         if frequency == "daily":
-            list= OneStepBeforeApprovalAndFresh(cursor, rangeId)
+            list= NearApprovalAndFreshOrUnscanned(cursor, rangeId)
         else:
             list = casesNotUpdatedToday(cursor, rangeId)
         
@@ -55,7 +55,7 @@ def batchScrape(rangeId, frequency:str = "daily"):
                 if dbTup!=None and dbTup[0]!=None:
                     currType = dbTup[0]
                     currStatusCode = dbTup[1]
-                    if currStatusCode not in [9, 10, 11, 15] and newStatusCode in [9, 10, 11, 15]:
+                    if currStatusCode not in [9, 10, 11, 15] and currStatusCode != None and newStatusCode in [9, 10, 11, 15]:
                         # add to "approvedtoday database"
                         print("!!!!!!!!!!!NEW APPROVED CASE "+ caseNumber + "WOOHOO!!!!!!!!!!!!!!!!!!!!!!!!")
                         cnx2approved = databaseConnect("ApprovedCasesToday")
