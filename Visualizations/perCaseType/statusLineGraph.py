@@ -1,9 +1,10 @@
+from turtle import color
 from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure, show
 from helpers.dbConnect import databaseConnect
 from bokeh.embed import components
 from constants import CASE_TYPES
-from bokeh.models import DatetimeTickFormatter
+from bokeh.models import DatetimeTickFormatter, Legend, LegendItem
 import numpy as np
 import pandas as pd
 from bokeh.palettes import Category20_9
@@ -48,8 +49,14 @@ def outputStatusLineGraph(rangeId):
         
        
         dates = pd.to_datetime(result[0])
-        data = {"approved":result[1], "received":result[2], "date": dates, "activeReview":result[3], 
-        "denied":result[4], "RFEreq":result[5], "IntSched":result[6], "Other":result[7], "IntReady":result[8], "RFErec":result[9]}
+        labels=["Case Received", "Active Review",  "RFE requested", "RFE received",
+                "Interview Ready", "Interview Scheduled", "Approved", "Denied", "Other"]
+        data = {"Approved":result[1], "Case Received":result[2], "date": dates, 
+                "Active Review":result[3], "Denied":result[4], "RFE requested":result[5], 
+                "Interview Scheduled":result[6], "Other":result[7], "Interview Ready":result[8], 
+                "RFE received":result[9],
+                }
+        
 
         source = ColumnDataSource(data=data)
         
@@ -57,11 +64,13 @@ def outputStatusLineGraph(rangeId):
            x_axis_type="datetime",
            background_fill_color="#efefef")
         dictOfGraphs[caseType].title.text = 'Number of Cases by Status, Over Time'
-  
-  
-        dictOfGraphs[caseType].vline_stack(["approved", "received", "activeReview", "denied", 
-        "RFEreq", "IntSched", "Other", "IntReady", "RFErec"], color=Category20_9, x="date", source=source)
+        
+        for i in range(9):
+            dictOfGraphs[caseType].line(dates, data[labels[i]], line_color=Category20_9[i], legend_label=labels[i])
 
 
+        #give color to legend items
+      
+        
        
     return dictOfGraphs
