@@ -64,11 +64,17 @@ def outputStatusLineGraph(rangeId):
            x_axis_type="datetime",
            background_fill_color="#efefef")
         dictOfGraphs[caseType].title.text = 'Number of Cases by Status, Over Time'
-        
+        legendItems = []
+
         for i in range(9):
-            dictOfGraphs[caseType].line(dates, data[labels[i]], line_color=Category20_9[i], legend_label=labels[i])
+            r= dictOfGraphs[caseType].line(dates, data[labels[i]], line_color=Category20_9[i])
+            item= LegendItem(label=labels[i], renderers=[r], index=i)
+            legendItems.append(item)
 
-
+        legend = Legend(items=legendItems)
+        legend.click_policy="mute"
+        dictOfGraphs[caseType].add_layout(legend, 'right')
+    
         #give color to legend items
       
         
