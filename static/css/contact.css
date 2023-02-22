@@ -1,0 +1,27 @@
+@import "navbar.css";
+
+body {
+	background-color:#F7CAC9;
+}
+
+
+
+h1 {
+	font-family: 'Open Sans Condensed', arial, sans;
+	text-align: center;
+	padding-top: 2%;
+	padding-bottom: 2%;
+	box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.22);
+	-moz-box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.22);
+	-webkit-box-shadow:  0px 0px 15px rgba(0, 0, 0, 0.22);
+}
+
+
+.contact {
+    padding-top: 15rem;
+    width: 50rem;
+    text-align: center;
+    font-family: monospace;
+    margin: auto;
+    font-size: 20px
+}

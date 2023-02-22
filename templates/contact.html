@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/range.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/contact.css') }}">
     <title>Document</title>
-    <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
-  
-    
+    <script>
+       
+    </script>
 </head>
 <body>
+    
   <nav id="navbar" class="">
     <div class="nav-wrapper">
       <div class="logo">
@@ -25,18 +26,9 @@
     </div>
   </nav>
 
-    <div id="ranges" class="ranges">
-        <div><h2>Click on any case range below:</h2></div>
-        <div class="rangeList">
-            {%for text in rangeToText.keys()%}
-                <div class="range">
-                   <a href="{{ url_for('views.caseData', rangeId=rangeToText[text]) }}">
-                    {{text}}
-                </a>
-                </div>
-                {%endfor%}
-
-        </div>
-    </div>
-
+  <div class="contact">
+    <p>Write to immigence@proton.me if you have any questions or request.
+    </p>
+   </div>
 </body>
+</html>

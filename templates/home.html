@@ -14,13 +14,13 @@
     <nav id="navbar" class="">
         <div class="nav-wrapper">
           <div class="logo">
-            <a href="#home"><i class="fa fa-angellist"></i>IMMIGENCE: Your USCIS insights</a>
+            <a href="{{url_for('views.home')}}"><i class="fa fa-angellist"></i>IMMIGENCE: Your USCIS insights</a>
           </div>
           <ul id="menu">
             <li><a href="{{url_for('views.home')}}">Home</a></li>
-            <li><a href="#services">Services</a></li>
-            <li><a href="{{url_for('views.invalid')}}"">About</a></li>
-            <li><a href="#contact">Contact</a></li>
+            <li><a href="{{url_for('views.displayRanges')}}">Ranges</a></li>
+            <li><a href="{{url_for('views.about')}}">About</a></li>
+            <li><a href="{{url_for('views.contact')}}">Contact</a></li>
           </ul>
         </div>
       </nav>
@@ -357,6 +357,13 @@
             <br>
             <input type='submit'>
     </form>
+
+    <div class="TodayApprovedCases">
+        {% for i in range(11) %}
+        {{ i }}
+        {% endfor %}
+
+    </div>
 
     
 </body>

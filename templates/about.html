@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
     <title>Document</title>
     <script>
        
@@ -12,20 +12,26 @@
 </head>
 <body>
     
-    <nav id="navbar" class="">
-        <div class="nav-wrapper">
-          <div class="logo">
-            <a href="#home"><i class="fa fa-angellist"></i>IMMIGENCE: Your USCIS insights</a>
-          </div>
-          <ul id="menu">
-            <li><a href="{{url_for('views.home')}}">Home</a></li>
-            <li><a href="#services">Services</a></li>
-            <li><a href="{{url_for('views.invalid')}}"">About</a></li>
-            <li><a href="#contact">Contact</a></li>
-          </ul>
-        </div>
-      </nav>
+  <nav id="navbar" class="">
+    <div class="nav-wrapper">
+      <div class="logo">
+        <a href="{{url_for('views.home')}}"><i class="fa fa-angellist"></i>IMMIGENCE: Your USCIS insights</a>
+      </div>
+      <ul id="menu">
+        <li><a href="{{url_for('views.home')}}">Home</a></li>
+        <li><a href="{{url_for('views.displayRanges')}}">Ranges</a></li>
+        <li><a href="{{url_for('views.about')}}">About</a></li>
+        <li><a href="{{url_for('views.contact')}}">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
 
-    <p>About this site: the data is collected from USCIS website. Please email for the github link if you would like to contribute.</p>
+    <div class="about">
+    <p>About this site: the data is collected from USCIS website. Each inquiry from the user will trigger either a new range of 5000 cases
+      to be added to the daily scanning task or existing range insight.
+      If a case is already approved when the scanner gets to it, the scanner might not know what the petition type is. In that case, the cases
+      will go under the "approved unknown" category. 
+    </p>
+   </div>
 </body>
 </html>

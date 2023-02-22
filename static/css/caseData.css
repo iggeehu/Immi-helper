@@ -6,6 +6,11 @@ body {
 	background-color:#F7CAC9;
 }
 
+#realBody {
+	padding-top: 7%
+
+}
+
 h1 {
 	font-family: 'Open Sans Condensed', arial, sans;
 	text-align: center;
@@ -43,6 +48,7 @@ line-height: 1.618em;
 .wrapper {
 max-width: 50rem;
 width: 100%;
+height:auto;
 margin: 0 auto;
 }
 .tabs {
@@ -83,7 +89,8 @@ top: -0.25rem;
 transition: top 0.25s;
 }
 .tab-content {
-height: 12rem;
+height: 40rem;
+width:50rem;
 position: absolute;
 z-index: 1;
 top: 2.75em;
