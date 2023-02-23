@@ -5,10 +5,7 @@ from bs4 import BeautifulSoup as bs
 import random
 from helpers.checks import rangeLogTableExist, rangeTablePopulated
 from helpers.dbConnect import databaseConnect, databaseClose
-
 from helpers.conversions import getCasePrefix
-
-
 
 
 
@@ -31,8 +28,10 @@ def scrapeSingle(case_number):
             print("h4 exists and shows You have the following errors")
             return None
     result = dict()
+    
     result['title'] = resultTitle
     result['content'] = resultContent
+
     return result
 
 
@@ -103,7 +102,9 @@ def populateRangeTable(rangeId):
 
 def addToDistributionTable(rangeId):
  
-        caseTypes = {"I-140":0,"I-765":0,"I-821":0,"I-131":0,"I-129":0,"I-539":0,"I-130":0,"I-90":0,"I-485":0,"N-400":0, "I-751":0, "I-824":0, "Approv":0, "OtherS":0}
+        caseTypes = {"I-140":0,"I-765":0,"I-821":0,"I-131":0,"I-129":0,"I-539":0,
+        "I-130":0,"I-90":0,"I-485":0,"N-400":0, "I-751":0, "I-824":0, "Approv":0, 
+        "OtherS":0}
         cnx = databaseConnect("QueryableCases")
         cursor = cnx.cursor()
         
