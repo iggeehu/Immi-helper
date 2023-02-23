@@ -31,6 +31,15 @@
       to be added to the daily scanning task or existing range insight.
       If a case is already approved when the scanner gets to it, the scanner might not know what the petition type is. In that case, the cases
       will go under the "approved unknown" category. 
+
+      Implementation: the scanning for all the ranges is done daily, but not all 5000 cases are scanned everyday. 
+      Only those that are one step away from approval are. The rest is scanned every three days. This is to improve performance,
+      reduce computing time, and avoid causing too much stress to the USCIS server.
+
+      This project is hosted with my personal budget. Donations are welcome and can help me purchase more computing power, so that
+      the site can respond faster, gather more data, add more powerful features such as:
+        - more accurate average approval time
+        - report on wider Ranges
     </p>
    </div>
 </body>
