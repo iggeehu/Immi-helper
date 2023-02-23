@@ -1,11 +1,11 @@
 
-from secret import secret
+from secret import dbPwd
 import mysql.connector
 from mysql.connector import errorcode
 
 def databaseConnect(schema):
     try:
-        cnx = mysql.connector.connect(user='admin', password=secret,
+        cnx = mysql.connector.connect(user='admin', password=dbPwd,
                                 host='immigence.cor389u8xll2.us-east-1.rds.amazonaws.com',
                                 database=schema)
         return cnx
