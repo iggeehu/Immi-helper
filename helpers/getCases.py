@@ -1,6 +1,19 @@
 from helpers.conversions import getCasePrefix
 from random import sample
 
+from helpers.dbConnect import databaseConnect
+
+def getAllRanges():
+    cnx = databaseConnect("TypeDistribution")
+    cursor = cnx.cursor()
+    query="Select rangeId from TypeDistribution"
+    cursor.execute(query)
+    list=[]
+    listTups = cursor.fetchall()
+    for tup in listTups:
+        list.append(tup[0])
+    return list
+    
 def shuffledCasesList(rangeId):
     case_stub = getCasePrefix(rangeId)+rangeId[1:7]
     list=[]
@@ -30,7 +43,7 @@ def casesNeverScanned(cursor, rangeId):
         list.append(tup[0])
     return list
 
-def OneStepBeforeApprovalAndFresh(cursor, rangeId):
+def NearApprovalAndFreshOrUnscanned(cursor, rangeId):
     query="Select CaseNumber from "+ rangeId +" where (StatusCode in (2, 4, 5, 6, 8, 14) and DATE(LastFetched) != CURDATE()) or (LastFetched is null)"
     cursor.execute(query)
     list=[]
