@@ -1,3 +1,4 @@
+from concurrent.futures.thread import _worker
 from flask import Blueprint, render_template, request, redirect, url_for
 from bs4 import BeautifulSoup as bs
 from Visualizations.perCaseType.statusLineGraph import outputStatusLineGraph
@@ -15,6 +16,7 @@ from constants import CASE_TYPES
 from bokeh.embed import components
 from secret import dbPwd
 from datetime import datetime
+from runworker import conn
 
 # from Visualizations.caseTypePie import script, div
 
@@ -51,8 +53,7 @@ def displayRanges():
 @views.route('/handle_data', methods=['POST'])
 def handle_data():
     print(dbPwd)
-    redis_conn = Redis()
-    init = Queue('high', connection=redis_conn)
+    init = Queue('high', connection=conn)
     case_number = request.form['case_number']
     petition_date = request.form['petition_date']
     petition_type = request.form['petition_type']
