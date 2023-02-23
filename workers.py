@@ -61,7 +61,7 @@ def batchScrape(rangeId, frequency:str = "daily"):
                         cnx2approved = databaseConnect("ApprovedCasesToday")
                         cursor2approved = cnx2approved.cursor()
                         addQuery = "INSERT INTO ApprovedCasesToday (CaseNumber, CaseType, ApprovalTime) values (%s, %s, %s)"
-                        cursor2approved.execute(addQuery, (caseNumber, currType, now.strftime("%Y-%m-%d")))
+                        cursor2approved.execute(addQuery, (caseNumber, currType,  dt_string))
                         cnx2approved.commit()
                         cursor2approved.close()
                         cnx2approved.close()

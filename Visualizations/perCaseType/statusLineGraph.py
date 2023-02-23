@@ -1,4 +1,3 @@
-from turtle import color
 from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure, show
 from helpers.dbConnect import databaseConnect
