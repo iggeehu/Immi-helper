@@ -1,2 +1,2 @@
 worker: python -u run-worker.py
-web: python app.py
+web: gunicorn gettingstarted.wsgi
