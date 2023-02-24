@@ -31,16 +31,17 @@ from urllib.parse import urlparse
 
 
 listen = ['high', 'default', 'low']
-# redis_url = os.getenv('REDIS_URL','redis://localhost:6379')
-# if not redis_url:
-#     raise RuntimeError('Set up Redis To Go first.')
+redis_url = os.getenv('REDIS_URL','redis://localhost:6379')
+print(redis_url)
+conn = redis.from_url(redis_url)
 
-url = urlparse(os.environ.get("REDIS_URL"))
-conn = redis.Redis(host=url.hostname, port=url.port, password=url.password, ssl=True, ssl_cert_reqs=None)
-print(url)
+# url = urlparse(os.environ.get("REDIS_URL"))
+# conn = redis.Redis(host=url.hostname, port=url.port, password=url.password, ssl=True, ssl_cert_reqs=None)
+# print(url)
 
 
-# conn = redis.from_url(redis_url)
+
+
 
 
 
