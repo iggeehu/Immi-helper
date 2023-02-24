@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/py/bin/env python
 from redis import Redis
 from rq import Worker
 
@@ -20,9 +20,31 @@ from bs4 import BeautifulSoup as bs
 import random
 from MySQLdb import _mysql
 import datetime
-import dotenv
+import os
 from constants import SAMPLE_SIZE
+import redis
+from redis import Redis
+from rq import Queue, Connection
+from rq.worker import HerokuWorker as Worker
+from urllib.parse import urlparse
 
-# Provide the worker with the list of queues (str) to listen to.
-w = Worker(['high'], connection=Redis())
-w.work()
+
+
+listen = ['high', 'default', 'low']
+# redis_url = os.getenv('REDIS_URL','redis://localhost:6379')
+# if not redis_url:
+#     raise RuntimeError('Set up Redis To Go first.')
+
+url = urlparse(os.environ.get("REDIS_URL"))
+conn = redis.Redis(host=url.hostname, port=url.port, password=url.password, ssl=True, ssl_cert_reqs=None)
+
+
+# conn = redis.from_url(redis_url)
+
+
+
+if __name__ == '__main__':
+    with Connection(conn):
+        worker = Worker(map(Queue, listen))
+        worker.work()
+
