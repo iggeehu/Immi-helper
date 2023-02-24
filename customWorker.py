@@ -37,6 +37,7 @@ listen = ['high', 'default', 'low']
 
 url = urlparse(os.environ.get("REDIS_URL"))
 conn = redis.Redis(host=url.hostname, port=url.port, password=url.password, ssl=True, ssl_cert_reqs=None)
+print(url)
 
 
 # conn = redis.from_url(redis_url)
