@@ -1,3 +1,4 @@
+import random
 
 def getCasePrefix(rangeId):
     rangeToCasePrefixMap = {"A":"EAC","B":"VSC","C":"WAC", "D":"CSC","E":"LIN","F":"NSC","G":"SRC","H":"TSC",
@@ -77,3 +78,8 @@ def getRangeText(rangeId):
     caseTailEnd = caseTailBegin + 4999
 
     return casePrefix+caseMiddle+str(caseTailBegin) + "-" + casePrefix+caseMiddle+str(caseTailEnd)
+
+    
+
+def scrapeAll(probab):
+    return random.random() < probab
