@@ -13,31 +13,33 @@ def getStatusDataPerType(rangeId, caseType):
     cursor = cnx.cursor()
     tableName = "R"+rangeId
     query = "Select * from "+tableName +" where caseType = %s"
-    cursor.execute(query, (caseType,))
-    result = cursor.fetchall()
-    collectionDates = []
-    approved = []
-    received = []
-    activeReview =[]
-    denied = []
-    RFEreq = []
-    IntSched = []
-    Other =[]
-    IntReady=[]
-    RFErec = []
-    for tup in result:
-        collectionDates.append(tup[1])
-        approved.append(tup[3])
-        received.append(tup[4])
-        activeReview.append(tup[5])
-        denied.append(tup[6])
-        RFEreq.append(tup[7])
-        IntSched.append(tup[8])
-        Other.append(tup[9])
-        IntReady.append(tup[(10)])
-        RFErec.append(tup[11])
-    return [collectionDates, approved,received,activeReview,denied,RFEreq, IntSched, Other,IntReady,RFErec]
-
+    try:
+        cursor.execute(query, (caseType,))
+        result = cursor.fetchall()
+        collectionDates = []
+        approved = []
+        received = []
+        activeReview =[]
+        denied = []
+        RFEreq = []
+        IntSched = []
+        Other =[]
+        IntReady=[]
+        RFErec = []
+        for tup in result:
+            collectionDates.append(tup[1])
+            approved.append(tup[3])
+            received.append(tup[4])
+            activeReview.append(tup[5])
+            denied.append(tup[6])
+            RFEreq.append(tup[7])
+            IntSched.append(tup[8])
+            Other.append(tup[9])
+            IntReady.append(tup[(10)])
+            RFErec.append(tup[11])
+        return [collectionDates, approved,received,activeReview,denied,RFEreq, IntSched, Other,IntReady,RFErec]
+    except:
+        return None
 
 
 def outputStatusLineGraph(rangeId):
@@ -45,7 +47,8 @@ def outputStatusLineGraph(rangeId):
     
     for caseType in CASE_TYPES:    
         result = getStatusDataPerType(rangeId, caseType)
-        
+        if result==None:
+            return None
        
         dates = pd.to_datetime(result[0])
         labels=["Case Received", "Active Review",  "RFE requested", "RFE received",

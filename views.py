@@ -5,7 +5,7 @@ from Visualizations.perCaseType.statusLineGraph import outputStatusLineGraph
 
 from helpers.getCases import getAllRanges
 from helpers.dbOperations import scrapeSingle, createRangeLogTable, addToDistributionTable, createRangeQueryableTable
-from helpers.conversions import getRangeId, getStatusCode, getRangeText
+from helpers.conversions import getRangeId, getStatusCode, getRangeText, scrapeAll
 from helpers.checks import checkType, rangeExist
 from helpers.dbConnect import databaseClose, databaseConnect
 from Visualizations.caseTypePie import outputPlot
@@ -16,7 +16,9 @@ from constants import CASE_TYPES
 from bokeh.embed import components
 from secret import dbPwd
 from datetime import datetime
-from customWorker import conn
+
+
+# from customWorker import conn
 
 # from Visualizations.caseTypePie import script, div
 
@@ -53,7 +55,7 @@ def displayRanges():
 @views.route('/handle_data', methods=['POST'])
 def handle_data():
     print(dbPwd)
-    # redis_conn = Redis()
+    conn = Redis()
     init = Queue('default', connection=conn)
     case_number = request.form['case_number']
     petition_date = request.form['petition_date']
@@ -102,7 +104,7 @@ def handle_data():
         return render_template("checkBacklater.html")
     else:
         populateRangeJob=init.enqueue('helpers.dbOperations.populateRangeTable', rangeId, retry=Retry(max=10, interval=10),job_timeout='24h')
-        if datetime.today().weekday() == 2 or datetime.today().weekday()==5:
+        if scrapeAll(0.4):
             dailyScrapeJob = init.enqueue('workers.batchScrape', rangeId, retry=Retry(max=10, interval=10),job_timeout='24h', depends_on= populateRangeJob)
         else:
             dailyScrapeJob = init.enqueue('workers.batchScrape', args=(rangeId,), kwargs={"frequency": "daily"}, retry=Retry(max=10, interval=10),job_timeout='24h', depends_on= populateRangeJob)
@@ -115,17 +117,20 @@ def handle_data():
 def caseData(rangeId):
     distGraph, dataTable = outputPlot(rangeId)
     statusGraphDict = outputStatusLineGraph(rangeId)
-    script, divTups = components((distGraph, dataTable, *statusGraphDict.values()))
-    divDist = divTups[0]
-    divTable = divTups[1]
-    caseTypeDivs = divTups[2:]
-    DivDicts = {}
-    i=0
-    for key in statusGraphDict.keys():
-        statusGraphDict[key]=caseTypeDivs[i]
-        i+=1
-    return render_template("caseData.html", rangeText=getRangeText(rangeId), 
-    script = script, divDist = divDist, divTable = divTable, statusGraphDict=statusGraphDict)
+    if statusGraphDict==None:
+        return render_template("checkBacklater.html")
+    else:
+        script, divTups = components((distGraph, dataTable, *statusGraphDict.values()))
+        divDist = divTups[0]
+        divTable = divTups[1]
+        caseTypeDivs = divTups[2:]
+        DivDicts = {}
+        i=0
+        for key in statusGraphDict.keys():
+            statusGraphDict[key]=caseTypeDivs[i]
+            i+=1
+        return render_template("caseData.html", rangeText=getRangeText(rangeId), 
+        script = script, divDist = divDist, divTable = divTable, statusGraphDict=statusGraphDict)
      
    
 

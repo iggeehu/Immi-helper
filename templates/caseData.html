@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/caseData.css') }}">
     
 
-    <title>Document</title>
+    <title>Immigence - Case Insights</title>
     <script src="https://cdn.bokeh.org/bokeh/release/bokeh-3.0.0.min.js"
     crossorigin="anonymous"></script>
 <script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-3.0.0.min.js"
@@ -65,7 +65,9 @@
         </div>
 
         <h3>Status Trend for Each Petition Type</h3>
+        <h4>If you fail to see any graph - they are waiting on data collection to complete!</h4>
         <div class="wrapper statusPerType">
+            
             <div class="tabs">
                 {%for caseType in statusGraphDict.keys()%}
                 <div class="tab">
