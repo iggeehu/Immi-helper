@@ -1,6 +1,5 @@
 #!/py/bin/env python
-from redis import Redis
-from rq import Worker
+
 
 # Preload libraries
 from distutils.log import error
@@ -8,8 +7,7 @@ from xmlrpc.client import DateTime
 import helpers
 import numpy
 from random import randint as rand, sample as sample
-from redis import Redis
-from rq import Worker
+
 from time import sleep
 from secret import dbPwd, agentList
 import mysql.connector
@@ -22,11 +20,15 @@ from MySQLdb import _mysql
 import datetime
 import os
 from constants import SAMPLE_SIZE
+
+
+from rq import Queue, Connection
+
 import redis
 from redis import Redis
-from rq import Queue, Connection
-from rq.worker import HerokuWorker as Worker
-from urllib.parse import urlparse
+# from rq.worker import HerokuWorker as Worker
+from rq import Worker
+
 
 
 
@@ -34,6 +36,7 @@ listen = ['high', 'default', 'low']
 redis_url = os.getenv('REDIS_URL','redis://localhost:6379')
 print(redis_url)
 conn = redis.from_url(redis_url)
+
 
 # url = urlparse(os.environ.get("REDIS_URL"))
 # conn = redis.Redis(host=url.hostname, port=url.port, password=url.password, ssl=True, ssl_cert_reqs=None)
