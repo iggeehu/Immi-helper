@@ -26,8 +26,8 @@ from rq import Queue, Connection
 
 import redis
 from redis import Redis
-# from rq.worker import HerokuWorker as Worker
-from rq import Worker
+from rq.worker import HerokuWorker as Worker
+# from rq import Worker
 
 
 
