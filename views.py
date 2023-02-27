@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup as bs
 from Visualizations.perCaseType.statusLineGraph import outputStatusLineGraph
 
 from helpers.getCases import getAllRanges
-from helpers.dbOperations import scrapeSingle, createRangeLogTable, addToDistributionTable, createRangeQueryableTable
+from helpers.dbOperations import scrapeSingle, createRangeLogTable, addToDistributionTable, createRangeQueryableTable, returnAllRanges
 from helpers.conversions import getRangeId, getStatusCode, getRangeText, scrapeAll
 from helpers.checks import checkType, rangeExist
 from helpers.dbConnect import databaseClose, databaseConnect
@@ -16,6 +16,7 @@ from constants import CASE_TYPES
 from bokeh.embed import components
 from secret import dbPwd
 from datetime import datetime
+
 
 
 from customWorker import conn

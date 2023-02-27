@@ -144,7 +144,19 @@ def addToDistributionTable(rangeId):
         cnx2.close()
 
 
-
+def returnAllRanges():
+    cnx=databaseConnect("QueryableCases")
+    cursor=cnx.cursor
+    try:
+        query= "SELECT table_name FROM information_schema.tables"
+        listTups = cursor.execute(query)
+        list = []
+        for tup in listTups:
+            list.append(tup[0])
+        return list
+    except:
+        raise "DB connection failed"
+        
 
 
 
