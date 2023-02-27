@@ -2,7 +2,7 @@ from concurrent.futures.thread import _worker
 from flask import Blueprint, render_template, request, redirect, url_for
 from bs4 import BeautifulSoup as bs
 from Visualizations.perCaseType.statusLineGraph import outputStatusLineGraph
-
+from adminWorker import scrapeAll
 from helpers.getCases import getAllRanges
 from helpers.dbOperations import scrapeSingle, createRangeLogTable, addToDistributionTable, createRangeQueryableTable
 from helpers.conversions import getRangeId, getStatusCode, getRangeText, scrapeAll
@@ -133,7 +133,8 @@ def caseData(rangeId):
         script = script, divDist = divDist, divTable = divTable, statusGraphDict=statusGraphDict)
      
    
-
-
+@views.route("/tempScrapeAll")
+def invalid():
+    scrapeAll()
  
 
