@@ -135,7 +135,7 @@ def caseData(rangeId):
      
 
 @views.route('/scrapeAll', methods=['GET'])  
-def scrapeAll():
+def scrapeAdmin():
    
     rangesList = returnAllRanges()
     for range in rangesList:
