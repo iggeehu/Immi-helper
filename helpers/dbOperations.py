@@ -145,17 +145,18 @@ def addToDistributionTable(rangeId):
 
 
 def returnAllRanges():
-    cnx=databaseConnect("QueryableCases")
-    cursor=cnx.cursor
+    cnx=databaseConnect("TypeDistribution")
+    cursor=cnx.cursor()
     try:
-        query= "SELECT table_name FROM information_schema.tables"
-        listTups = cursor.execute(query)
+        query= "SELECT * FROM TypeDistribution"
+        cursor.execute(query)
+        listTups=cursor.fetchall()
         list = []
         for tup in listTups:
             list.append(tup[0])
         return list
     except:
-        raise "DB connection failed"
+        raise ConnectionError("DB connection failed")
         
 
 
