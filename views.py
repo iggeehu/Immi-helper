@@ -132,8 +132,14 @@ def caseData(rangeId):
         return render_template("caseData.html", rangeText=getRangeText(rangeId), 
         script = script, divDist = divDist, divTable = divTable, statusGraphDict=statusGraphDict)
      
-   
 
+@views.route('/scrapeAll', methods=['GET'])  
+def scrapeAll():
+   
+    rangesList = returnAllRanges()
+    for range in rangesList:
+        init = Queue('default', connection=conn)
+        dailyScrapeJob = init.enqueue('workers.batchScrape', range, retry=Retry(max=10, interval=10),job_timeout='24h')
 
  
 
