@@ -20,7 +20,7 @@ from datetime import datetime
 
 
 
-# from customWorker import conn
+from customWorker import conn
 
 # from Visualizations.caseTypePie import script, div
 
@@ -57,7 +57,7 @@ def displayRanges():
 @views.route('/handle_data', methods=['POST'])
 def handle_data():
     print(dbPwd)
-    conn = Redis()
+    # conn = Redis()
     init = Queue('default', connection=conn)
     case_number = request.form['case_number']
     petition_date = request.form['petition_date']
@@ -82,12 +82,9 @@ def handle_data():
     if petition_type!="Other":
        
         status_code=getStatusCode(result['title']) 
-        with DatabaseConnect("UserInfo") as cnx:
-            cursor=cnx.cursor()
+        with DatabaseConnect("UserInfo") as (cnx, cursor):
             query="INSERT INTO Users (CaseNumber, CaseType, State, HomeCountry, PetitionDate, StatusCode) values(%s, %s, %s, %s, %s, %s)"
             cursor.execute(query,(case_number, petition_type, state, home_country, petition_date, status_code))
-            cursor.close()
-            cnx.commit()
 
 
     #ifRangeExists, retrieve data from DB

@@ -19,11 +19,11 @@ class DatabaseConnect:
         self.name=name
     def __enter__(self):
         self.cnx = databaseConnect(self.name)
-        # self.cursor=self.cnx.cursor()
-        return self.cnx
+        self.cursor=self.cnx.cursor()
+        return self.cnx, self.cursor
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # self.cnx.commit()
-        # self.cursor.close()
+        self.cnx.commit()
+        self.cursor.close()
         self.cnx.close()
 
     
