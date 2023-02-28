@@ -75,7 +75,7 @@ def batchScrape(rangeId, frequency:str = None):
                     else:
                         query ="UPDATE " +rangeId+ " SET caseType = 'invalid', lastFetched = %s WHERE CaseNumber = %s"
                         cursor.execute(query, (dt_string, caseNumber))
-
+                    cnx.commit()
                 except:
                     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!EXCEPTIONNN")
                     sleep(10)
