@@ -1,13 +1,14 @@
 from concurrent.futures.thread import _worker
 from flask import Blueprint, render_template, request, redirect, url_for
 from bs4 import BeautifulSoup as bs
+from h11 import Data
 from Visualizations.perCaseType.statusLineGraph import outputStatusLineGraph
 
 from helpers.getCases import getAllRanges
 from helpers.dbOperations import scrapeSingle, createRangeLogTable, addToDistributionTable, createRangeQueryableTable, returnAllRanges
 from helpers.conversions import getRangeId, getStatusCode, getRangeText, scrapeAll
 from helpers.checks import checkType, rangeExist
-from helpers.dbConnect import databaseClose, databaseConnect
+from helpers.dbConnect import DatabaseConnect
 from Visualizations.caseTypePie import outputPlot
 from workers import batchScrape
 from rq import Queue, Retry
@@ -19,7 +20,7 @@ from datetime import datetime
 
 
 
-from customWorker import conn
+# from customWorker import conn
 
 # from Visualizations.caseTypePie import script, div
 
@@ -56,7 +57,7 @@ def displayRanges():
 @views.route('/handle_data', methods=['POST'])
 def handle_data():
     print(dbPwd)
-    # conn = Redis()
+    conn = Redis()
     init = Queue('default', connection=conn)
     case_number = request.form['case_number']
     petition_date = request.form['petition_date']
@@ -81,14 +82,13 @@ def handle_data():
     if petition_type!="Other":
        
         status_code=getStatusCode(result['title']) 
-        cnx=databaseConnect("UserInfo")
-        cursor=cnx.cursor()
-        query="INSERT INTO Users (CaseNumber, CaseType, State, HomeCountry, PetitionDate, StatusCode) values(%s, %s, %s, %s, %s, %s)"
-        cursor.execute(query,(case_number, petition_type, state, home_country, petition_date, status_code))
+        with DatabaseConnect("UserInfo") as cnx:
+            cursor=cnx.cursor()
+            query="INSERT INTO Users (CaseNumber, CaseType, State, HomeCountry, PetitionDate, StatusCode) values(%s, %s, %s, %s, %s, %s)"
+            cursor.execute(query,(case_number, petition_type, state, home_country, petition_date, status_code))
+            cursor.close()
+            cnx.commit()
 
-        cursor.close()
-        cnx.commit()
-        databaseClose(cnx)
 
     #ifRangeExists, retrieve data from DB
         #put data into visualization API

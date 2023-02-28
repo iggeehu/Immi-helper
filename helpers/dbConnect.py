@@ -3,6 +3,7 @@ from secret import dbPwd
 import mysql.connector
 from mysql.connector import errorcode
 
+
 def databaseConnect(schema):
     try:
         cnx = mysql.connector.connect(user='admin', password=dbPwd,
@@ -12,5 +13,17 @@ def databaseConnect(schema):
     except mysql.connector.Error as err:
         print("Something went wrong: {}".format(err))
 
-def databaseClose(cnx):
-    cnx.close()
+
+class DatabaseConnect:
+    def __init__(self,name):
+        self.name=name
+    def __enter__(self):
+        self.cnx = databaseConnect(self.name)
+        # self.cursor=self.cnx.cursor()
+        return self.cnx
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # self.cnx.commit()
+        # self.cursor.close()
+        self.cnx.close()
+
+    

@@ -1,35 +1,34 @@
-from helpers.dbConnect import databaseClose, databaseConnect
+from helpers.dbConnect import DatabaseConnect
 from helpers.conversions import getRangeId
 
 def rangeLogTableExist(rangeId):
-    cnx = databaseConnect("RangeLog")
-    tableName = "R"+rangeId
-    if cnx!=None:
-        cursor = cnx.cursor()
-        query = "SELECT count(*) FROM information_schema.TABLES \
-        WHERE (TABLE_SCHEMA = 'RangeLog') AND (TABLE_NAME = %s)"
-        cursor.execute(query, (tableName, ))
-        answer = cursor.fetchone()
-        if answer==None or answer[0]==0:
+    with DatabaseConnect("RangeLog") as cnx:
+        tableName = "R"+rangeId
+        if cnx!=None:
+            cursor = cnx.cursor()
+            query = "SELECT count(*) FROM information_schema.TABLES \
+            WHERE (TABLE_SCHEMA = 'RangeLog') AND (TABLE_NAME = %s)"
+            cursor.execute(query, (tableName, ))
+            answer = cursor.fetchone()
+            if answer==None or answer[0]==0:
+                return False
+            return True
+        else:
             return False
-        return True
-    else:
-        return False
 
 def rangeExist(rangeId):
-    cnx = databaseConnect("QueryableCases")
-    if cnx!=None:
-        cursor = cnx.cursor()
-        query = ("SHOW TABLES" )
-        cursor.execute(query)
-        ret = False
-        for table in cursor:
-            #a table exists, now check that it actually has rows (in case createNewRange stopped midway)
-            if table[0] == rangeId:
-                ret = True
-        cursor.close()
-        databaseClose(cnx)
-        return ret
+    with DatabaseConnect("QueryableCases") as cnx:
+        if cnx!=None:
+            cursor = cnx.cursor()
+            query = ("SHOW TABLES" )
+            cursor.execute(query)
+            ret = False
+            for table in cursor:
+                #a table exists, now check that it actually has rows (in case createNewRange stopped midway)
+                if table[0] == rangeId:
+                    ret = True
+            cursor.close()
+            return ret
 
 def checkType(petition_type, resultContent):
     case_types = ["I-485", 'I-140', 'I-765', 'I-821', 'I-131', 'I-129', 'I-539', 'I-130', 'I-90', 'N-400', 'I-751', 'I-824']
@@ -73,15 +72,15 @@ def caseInited(cursor, caseNumber):
 
  
 def rangeTablePopulated(rangeId):
-    cnx=databaseConnect("QueryableCases")
-    cursor=cnx.cursor()
-    query="Select count(*) from "+rangeId
-    cursor.execute(query)
-    if cursor.fetchall()[0][0]>4900:
-        print("rangeTablePopulated")
-        return True
-    print("rangeTable NOT populated")
-    return False
+    with DatabaseConnect("QueryableCases") as cnx:
+        cursor=cnx.cursor()
+        query="Select count(*) from "+rangeId
+        cursor.execute(query)
+        if cursor.fetchall()[0][0]>4900:
+            print("rangeTablePopulated")
+            return True
+        print("rangeTable NOT populated")
+        return False
 
 
 
