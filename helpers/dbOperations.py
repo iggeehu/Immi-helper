@@ -128,8 +128,7 @@ def addToDistributionTable(rangeId):
                 
 
 def returnAllRanges():
-    with DatabaseConnect("TypeDistribution") as cnx:
-        cursor=cnx.cursor()
+    with DatabaseConnect("TypeDistribution") as (cnx, cursor):
         try:
             query= "SELECT * FROM TypeDistribution"
             cursor.execute(query)

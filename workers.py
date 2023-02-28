@@ -13,6 +13,7 @@ from random import randint as rand, sample as sample
 from time import sleep
 import datetime
 from constants import SAMPLE_SIZE
+from helpers.conversions import scrapeAll
 
 
 #goal: delete invalid cases from the table that stores the range's queryable cases, populate initial status code
@@ -20,10 +21,10 @@ def batchScrape(rangeId, frequency:str = None):
     # print("rangeId from init:" + rangeId)
     with DatabaseConnect("QueryableCases") as (cnx, cursor):
         if cnx!=None:
-            if frequency == "daily":
-                list= NearApprovalAndFreshOrUnscanned(cursor, rangeId)
-            else:
+            if scrapeAll(0.5):
                 list = casesNotUpdatedToday(cursor, rangeId)
+            else:
+                list= NearApprovalAndFreshOrUnscanned(cursor, rangeId)
             
             while len(list) !=0:
                 print(len(list))

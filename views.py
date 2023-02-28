@@ -17,10 +17,7 @@ from constants import CASE_TYPES
 from bokeh.embed import components
 from secret import dbPwd
 from datetime import datetime
-
-
-
-# from customWorker import conn
+from customWorker import conn
 
 # from Visualizations.caseTypePie import script, div
 
@@ -56,8 +53,7 @@ def displayRanges():
 
 @views.route('/handle_data', methods=['POST'])
 def handle_data():
-    print(dbPwd)
-    conn = Redis()
+    # conn = Redis()
     init = Queue('default', connection=conn)
     case_number = request.form['case_number']
     petition_date = request.form['petition_date']
