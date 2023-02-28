@@ -92,21 +92,18 @@ def batchScrape(rangeId, frequency:str = "daily"):
 def checkAndFillRange(rangeId):
     if not rangeLogTableExist(rangeId):
         createRangeLogTable(rangeId)
-    with DatabaseConnect("RangeLog") as cnx:
+    with DatabaseConnect("RangeLog") as (cnx, cursor):
         tableName = "R"+rangeId
-        cursor = cnx.cursor()
         now = datetime.datetime.now()
     
         caseTypes = {"I-140":0,"I-765":0,"I-821":0,"I-131":0,"I-129":0,"I-539":0,"I-130":0,"I-90":0,"I-485":0,"N-400":0,"I-751":0, "I-824":0, "Approv":0, "OtherS":0}
 
         for caseType in caseTypes.keys():
-            with DatabaseConnect("QueryableCases") as cnx2:
-                cursor2=cnx2.cursor()    
+            with DatabaseConnect("QueryableCases") as (cnx2,cursor2):   
                 query="Select StatusCode from "+rangeId+" where CaseType=%s"
-                cursor2.execute(query, (caseType,))
-                
+                cursor2.execute(query, (caseType,))              
                 statusCodesTups = cursor2.fetchall()
-                cursor2.close()
+
 
             statusCodesDict ={"Received":0, "ActiveReview":0, "RFEreq":0, 
             "RFErec":0, "IntReady":0, "IntSched":0, "Denied":0, 
@@ -160,8 +157,8 @@ def checkAndFillRange(rangeId):
             statusCodesDict["Denied"], statusCodesDict["Approved"], statusCodesDict["Other"], 
             now.strftime("%Y-%m-%d"), caseType))
 
-            cnx.commit()
-        cursor.close()
+           
+       
         
 
 

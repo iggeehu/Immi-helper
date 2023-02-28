@@ -17,9 +17,8 @@ def rangeLogTableExist(rangeId):
             return False
 
 def rangeExist(rangeId):
-    with DatabaseConnect("QueryableCases") as cnx:
+    with DatabaseConnect("QueryableCases") as (cnx, cursor):
         if cnx!=None:
-            cursor = cnx.cursor()
             query = ("SHOW TABLES" )
             cursor.execute(query)
             ret = False
@@ -27,7 +26,6 @@ def rangeExist(rangeId):
                 #a table exists, now check that it actually has rows (in case createNewRange stopped midway)
                 if table[0] == rangeId:
                     ret = True
-            cursor.close()
             return ret
 
 def checkType(petition_type, resultContent):
@@ -72,12 +70,10 @@ def caseInited(cursor, caseNumber):
 
  
 def rangeTablePopulated(rangeId):
-    with DatabaseConnect("QueryableCases") as cnx:
-        cursor=cnx.cursor()
+    with DatabaseConnect("QueryableCases") as (cnx, cursor):
         query="Select count(*) from "+rangeId
         cursor.execute(query)
         if cursor.fetchall()[0][0]>4900:
-            print("rangeTablePopulated")
             return True
         print("rangeTable NOT populated")
         return False

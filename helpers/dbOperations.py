@@ -36,24 +36,20 @@ def scrapeSingle(case_number):
 
 
 def createRangeQueryableTable(rangeId):
-    with DatabaseConnect("QueryableCases") as cnx:
+    with DatabaseConnect("QueryableCases") as (cnx,cursor):
         if cnx!=None:
-            cursor = cnx.cursor()
             query = ("CREATE TABLE " + rangeId + " LIKE A001450")
             try:
                 cursor.execute(query)
-                cnx.commit()
-                cursor.close()
             except:
                 print("Creating new table failed")
 
 
 def createRangeLogTable(rangeId):
     if not rangeLogTableExist(rangeId):
-        with DatabaseConnect("RangeLog") as cnx:
+        with DatabaseConnect("RangeLog") as (cnx,cursor):
             tableName = "R"+rangeId
             if cnx!=None:
-                cursor = cnx.cursor()
                 query = ("CREATE TABLE " + tableName + " LIKE RA001450")
                 try:
                     cursor.execute(query)
@@ -61,8 +57,6 @@ def createRangeLogTable(rangeId):
                     print("Creating new table failed")
             else:
                     print("db connection failed")
-            cnx.commit()
-            cursor.close()
          
 
 
@@ -70,12 +64,10 @@ def createRangeLogTable(rangeId):
 
 def populateRangeTable(rangeId):
     if not rangeTablePopulated(rangeId):
-        with DatabaseConnect("QueryableCases") as cnx:
+        with DatabaseConnect("QueryableCases") as (cnx,cursor):
         
             if cnx!=None:
                 case_stub = getCasePrefix(rangeId)+rangeId[1:7]
-                cursor = cnx.cursor()
-            
                 base=0 if rangeId[7]=="0" else 5000
                 addOn = 0
                 while (addOn<5000):
@@ -93,10 +85,9 @@ def populateRangeTable(rangeId):
                     except:
                         addOn+=1
                     addOn+=1
-                    cnx.commit()
+
             else:
                 print("populating range table failed due to database Connection")        
-            cursor.close()
 
     else:
         return
@@ -106,14 +97,11 @@ def addToDistributionTable(rangeId):
         caseTypes = {"I-140":0,"I-765":0,"I-821":0,"I-131":0,"I-129":0,"I-539":0,
         "I-130":0,"I-90":0,"I-485":0,"N-400":0, "I-751":0, "I-824":0, "Approv":0, 
         "OtherS":0}
-        with DatabaseConnect("QueryableCases") as cnx:
-            cursor = cnx.cursor()
-            
-            for caseType in caseTypes.keys():
+        with DatabaseConnect("QueryableCases") as (cnx, cursor):
 
+            for caseType in caseTypes.keys():
                 query="Select count(*) from "+rangeId+ " where caseType=%s"
                 cursor.execute(query, (caseType,))
-            
                 count = cursor.fetchone()[0]
                 caseTypes[caseType]=count
             
@@ -122,13 +110,10 @@ def addToDistributionTable(rangeId):
             cursor.execute(query)
             caseTypes["Invalid"]=cursor.fetchone()[0]
 
-            cursor.close()
             
-            with DatabaseConnect("TypeDistribution") as cnx2:
-                cursor2=cnx2.cursor()
+            with DatabaseConnect("TypeDistribution") as (cnx2, cursor2):
                 query2="INSERT IGNORE INTO TypeDistribution (RangeId) values (%s) "
                 cursor2.execute(query2,(rangeId,))
-                cnx2.commit()
                 query3 = "UPDATE TypeDistribution set I485=%s, I765=%s, I129=%s, \
                     I130=%s, N400=%s, I539=%s, I131=%s, I821=%s, I140=%s, I90=%s, I751=%s, I824=%s, \
                     InvalidCases=%s, ApprovedAndUnknown=%s, OtherStatusAndUnknown=%s    \
@@ -139,8 +124,7 @@ def addToDistributionTable(rangeId):
                 caseTypes["I-140"],caseTypes["I-90"], 
                 caseTypes["I-751"], caseTypes["I-824"], caseTypes["Invalid"],
                 caseTypes["Approv"], caseTypes["OtherS"], rangeId))
-                cnx2.commit()
-                cursor2.close()
+
                 
 
 def returnAllRanges():
