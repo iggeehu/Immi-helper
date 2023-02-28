@@ -4,7 +4,7 @@ from helpers.dbConnect import DatabaseConnect
 
 from helpers.dbOperations import databaseConnect, scrapeSingle, createRangeLogTable
 from helpers.getCases import casesNotUpdatedToday, NearApprovalAndFreshOrUnscanned, casesNeverScanned
-from helpers.conversions import getStatusCode
+from helpers.conversions import getStatusCode, handleUnknownCaseType
 from helpers.checks import checkType, isLogUpdatedToday, rangeLogTableExist
 
 
@@ -40,12 +40,7 @@ def batchScrape(rangeId, frequency:str = None):
                         newContent=caseResult['content']
                         newStatusCode = getStatusCode(newTitle)
                         newCaseType = checkType("", newContent)
-                    
-                        #if new statusCode is approved and no type scraped, set "ApprovedUnknown" etc
-                        if newStatusCode in [9, 10, 11, 15] and newCaseType == "":
-                            newCaseType = "ApprovedUnknown"
-                        if newStatusCode in [14] and newCaseType=="":
-                            newCaseType = "OtherStatusUnknown"
+                        newCaseType = handleUnknownCaseType(newStatusCode, newCaseType)
 
                         #before updating, get the case's current status and caseType
                         dbQuery = "select caseType, statusCode from "+rangeId+" where caseNumber = %s"
@@ -59,12 +54,10 @@ def batchScrape(rangeId, frequency:str = None):
                             if currStatusCode not in [9, 10, 11, 15] and currStatusCode != None and newStatusCode in [9, 10, 11, 15]:
                                 # add to "approvedtoday database"
                                 print("!!!!!!!!!!!NEW APPROVED CASE "+ caseNumber + "WOOHOO!!!!!!!!!!!!!!!!!!!!!!!!")
-                                with DatabaseConnect("ApprovedCasesToday") as cnx2approved:
+                                with DatabaseConnect("ApprovedCasesToday") as (cnx2approved, cursor2approved):
                                     cursor2approved = cnx2approved.cursor()
                                     addQuery = "INSERT INTO ApprovedCasesToday (CaseNumber, CaseType, ApprovalTime) values (%s, %s, %s)"
                                     cursor2approved.execute(addQuery, (caseNumber, currType,  dt_string))
-                                    cnx2approved.commit()
-                                    cursor2approved.close()
                                     newCaseType = currType
 
                 

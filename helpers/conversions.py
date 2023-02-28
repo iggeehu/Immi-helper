@@ -83,3 +83,10 @@ def getRangeText(rangeId):
 
 def scrapeAll(probab):
     return random.random() < probab
+
+def handleUnknownCaseType(statusCode, caseType):
+    if statusCode in [9, 10, 11, 15] and caseType == "":
+        return "ApprovedUnknown"
+    if statusCode in [14] and caseType=="":
+        return "OtherStatusUnknown"
+    return caseType
