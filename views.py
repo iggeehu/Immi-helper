@@ -102,10 +102,7 @@ def handle_data():
         return render_template("checkBacklater.html")
     else:
         populateRangeJob=init.enqueue('helpers.dbOperations.populateRangeTable', rangeId, retry=Retry(max=10, interval=10),job_timeout='24h')
-        if scrapeAll(0.4):
-            dailyScrapeJob = init.enqueue('workers.batchScrape', rangeId, retry=Retry(max=10, interval=10),job_timeout='24h', depends_on= populateRangeJob)
-        else:
-            dailyScrapeJob = init.enqueue('workers.batchScrape', args=(rangeId,), kwargs={"frequency": "daily"}, retry=Retry(max=10, interval=10),job_timeout='24h', depends_on= populateRangeJob)
+        dailyScrapeJob = init.enqueue('workers.batchScrape', rangeId, retry=Retry(max=10, interval=10),job_timeout='24h', depends_on= populateRangeJob)
         createRangeLogTableJob = init.enqueue('helpers.dbOperations.createRangeLogTable', rangeId, retry=Retry(max=10, interval=10), depends_on=dailyScrapeJob)
         checkAndFillRangeLogJob = init.enqueue('workers.checkAndFillRange', rangeId, retry=Retry(max=10, interval=10), depends_on=createRangeLogTableJob)
         addToDistributionTable(rangeId)

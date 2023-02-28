@@ -25,6 +25,7 @@ def shuffledCasesList(rangeId):
     return list
 
 def casesNotUpdatedToday(cursor, rangeId):
+    print("cases not approved today called")
     query="Select CaseNumber from "+rangeId+" WHERE LastFetched < now() - interval 24 hour or LastFetched is null"
     # query="Select CaseNumber from "+rangeId+" WHERE caseType = ''"
     cursor.execute(query)
