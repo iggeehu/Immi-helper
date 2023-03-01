@@ -15,6 +15,16 @@ h1 {
 	-moz-box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.22);
 	-webkit-box-shadow:  0px 0px 15px rgba(0, 0, 0, 0.22);
 }
+
+h2 {
+	font-family: 'Open Sans Condensed', arial, sans;
+	text-align: center;
+}
+
+h3{
+	font-family: 'Open Sans Condensed', arial, sans;
+	text-align: center;
+}
 .form-style-8{
 	font-family: 'Open Sans Condensed', arial, sans;
 	width: 500px;
@@ -87,4 +97,98 @@ h1 {
 .form-style-8 input[type="submit"]:hover {
 	background:linear-gradient(to bottom, #34CACA 5%, #30C9C9 100%);
 	background-color:#34CACA;
+}
+
+.todayApprovedCases {
+	margin: 100px auto;
+	text-align:center;
+}
+
+.wrapper {
+	max-width: 50rem;
+	width: 100%;
+	height:auto;
+	margin: 0 auto;
+	}
+	.tabs {
+	position: relative;
+	margin: auto;
+	background: #6a7ac4;
+	height: 14.75rem;
+	width: 33rem;
+	}
+	.tabs::before,
+	.tabs::after {
+	content: "";
+	display: table;
+	}
+	.tabs::after {
+	clear: both;
+	}
+	.tab {
+	float: left;
+	}
+	.tab-switch {
+	display: none;
+	}
+	.tab-label {
+	position: relative;
+	display: block;
+	line-height: 2.75em;
+	height: 3em;
+	padding: 0 1.618em;
+	background: #6a7ac4;
+	border-right: 0.125rem solid #16a085;
+	color: #fff;
+	cursor: pointer;
+	top: 0;
+	transition: all 0.25s;
+	}
+	.tab-label:hover {
+	top: -0.25rem;
+	transition: top 0.25s;
+	}
+	.tab-content {
+	height: 20rem;
+	width:30rem;
+	position: absolute;
+	z-index: 1;
+	top: 2.75em;
+	left: 0;
+	padding: 1.618rem;
+	background: #fff;
+	color: #2c3e50;
+	border-bottom: 0.25rem solid #bdc3c7;
+	opacity: 0;
+	transition: all 0.35s;
+	}
+	.tab-switch:checked + .tab-label {
+	background: #fff;
+	color: #2c3e50;
+	border-bottom: 0;
+	border-right: 0.125rem solid #fff;
+	transition: all 0.35s;
+	z-index: 1;
+	top: -0.0625rem;
+	}
+	.tab-switch:checked + label + .tab-content {
+	z-index: 2;
+	opacity: 1;
+	transition: all 0.35s;
+	}
+	
+.case-link {
+	border: none;
+    outline: none;
+    background: none;
+    cursor: pointer;
+    color: black;
+    padding: 0;
+    text-decoration: none;
+    font-family: inherit;
+    font-size: inherit;
+}	
+
+.case-link:hover {
+	text-decoration: underline;
 }

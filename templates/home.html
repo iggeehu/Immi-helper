@@ -359,10 +359,33 @@
     </form>
 
     <div class="TodayApprovedCases">
-        {% for i in range(11) %}
-        {{ i }}
-        {% endfor %}
-
+        <h2>Today's Approvals</h2>
+        <h3>{{today}} EST</h3>
+        <div class="wrapper">
+            
+            <div class="tabs">
+                {%for prefix in todayApprovedDict.keys()%}
+                <div class="tab">
+                    <input type="radio" name="css-tabs" id="{{prefix}}" checked class="tab-switch">
+                    <label for="{{prefix}}" class="tab-label">{{prefix}}</label>
+                    <div class="tab-content">
+                        {% for casetype in todayApprovedDict[prefix].keys() %}
+                            <div class="casetype-approved">
+                                {% if todayApprovedDict[prefix][casetype] | length !=0 %}
+                                    <div>{{casetype}}:</div>
+                                    {% for casenumber in todayApprovedDict[prefix][casetype]%}
+                                        <form action="https://egov.uscis.gov/casestatus/mycasestatus.do?appReceiptNum={{casenumber}}" method="post">
+                                        <button type="submit" name={{casenumber}} value={{casenumber}} class="case-link">{{casenumber}}</button>
+                                        </form>
+                                    {%endfor%}
+                                {% endif %}
+                            </div>
+                        {%endfor%}
+                    </div>
+                </div>
+                {%endfor%}
+            </div>
+        </div>
     </div>
 
     
