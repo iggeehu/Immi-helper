@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/range.css') }}">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css"> 
     <title>Immigence - Ranges</title>
     <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
   
@@ -26,14 +27,23 @@
   </nav>
 
     <div id="ranges" class="ranges">
-        <div><h2>Click on any case range below:</h2></div>
+        <div class="range-title">
+          <h2>Case ranges and today's scanner progress:</h2>
+          <h3>LastUpdated: {{nowTime}}</h3>
+        
+        </div>
         <div class="rangeList">
-            {%for text in rangeToText.keys()%}
-                <div class="range">
-                   <a href="{{ url_for('views.caseData', rangeId=rangeToText[text]) }}">
-                    {{text}}
-                </a>
-                </div>
+            {%for range in rangeToTextPercentageDict.keys()%}
+                <div class="range-container">
+                    <div class="range">
+                      <a href="{{ url_for('views.caseData', rangeId=range) }}">
+                        {{rangeToTextPercentageDict[range][0]}}       
+                      </a>
+                    </div>
+                    <div class="w3-light-grey w3-round progress-bars">
+                      <div class="w3-container w3-round w3-blue" style="width: {{ rangeToTextPercentageDict[range][1] }}%">{{rangeToTextPercentageDict[range][1]}}%</div>
+                    </div> 
+                </div>  
                 {%endfor%}
 
         </div>

@@ -161,6 +161,7 @@ h3{
 	border-bottom: 0.25rem solid #bdc3c7;
 	opacity: 0;
 	transition: all 0.35s;
+	overflow: scroll;
 	}
 	.tab-switch:checked + .tab-label {
 	background: #fff;

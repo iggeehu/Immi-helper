@@ -16,9 +16,23 @@ h1 {
 	-webkit-box-shadow:  0px 0px 15px rgba(0, 0, 0, 0.22);
 }
 
+.range-title {
+	font-family: monospace;
+	text-align: center;
+}
+
+.ranges {
+	padding-top: 5%;
+}
 .rangeList {
 	text-align: center;
 	text-decoration: none;
+}
+
+.rangeContainer {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
 }
 
 .range {
@@ -28,4 +42,11 @@ h1 {
 .range:hover{
 	box-shadow: darkgoldenrod;
 	text-decoration: underline;
+}
+
+
+
+.progress-bars {
+	width: 20%;
+	margin: auto;
 }
