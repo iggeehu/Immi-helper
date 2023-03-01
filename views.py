@@ -120,7 +120,6 @@ def caseData(rangeId):
 
 @views.route('/scrapeAll', methods=['GET'])  
 def scrapeAdmin():
-   
     rangesList = returnAllRanges()
     for range in rangesList:
         init = Queue('default', connection=conn)
