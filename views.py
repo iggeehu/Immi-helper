@@ -125,6 +125,6 @@ def scrapeAdmin():
     for range in rangesList:
         init = Queue('default', connection=conn)
         dailyScrapeJob = init.enqueue('workers.batchScrape', range, retry=Retry(max=10, interval=10),job_timeout='24h')
-
+    return render_template("checkBacklater.html")
  
 
