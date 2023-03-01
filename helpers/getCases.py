@@ -1,18 +1,26 @@
 from helpers.conversions import getCasePrefix
 from random import sample
 
-from helpers.dbConnect import databaseConnect
+from helpers.dbConnect import DatabaseConnect, databaseConnect
 
 def getAllRanges():
-    cnx = databaseConnect("TypeDistribution")
-    cursor = cnx.cursor()
-    query="Select rangeId from TypeDistribution"
-    cursor.execute(query)
-    list=[]
-    listTups = cursor.fetchall()
-    for tup in listTups:
-        list.append(tup[0])
-    return list
+    with DatabaseConnect("TypeDistribution") as (cnx, cursor):
+        query="Select rangeId from TypeDistribution"
+        cursor.execute(query)
+        list=[]
+        listTups = cursor.fetchall()
+        for tup in listTups:
+            list.append(tup[0])
+        return list
+
+def getScannerPercentage(rangeId):
+    with DatabaseConnect("QueryableCases") as (cnx, cursor):
+        query="Select count(caseNumber) from "+rangeId+" where lastFetched > now() - interval 24 hour"
+        cursor.execute(query)
+        percentage=int(cursor.fetchone()[0]/5000*100)
+        return percentage
+
+
     
 def shuffledCasesList(rangeId):
     case_stub = getCasePrefix(rangeId)+rangeId[1:7]

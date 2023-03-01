@@ -43,12 +43,6 @@ conn = redis.from_url(redis_url)
 # conn = redis.Redis(host=url.hostname, port=url.port, password=url.password, ssl=True, ssl_cert_reqs=None)
 # print(url)
 
-
-
-
-
-
-
 if __name__ == '__main__':
     with Connection(conn):
         worker = Worker(map(Queue, listen))

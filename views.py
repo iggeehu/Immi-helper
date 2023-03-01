@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup as bs
 from h11 import Data
 from Visualizations.perCaseType.statusLineGraph import outputStatusLineGraph
 
-from helpers.getCases import getAllRanges
+from helpers.getCases import getAllRanges, getScannerPercentage
 from helpers.dbOperations import getTodayApprovedCases, scrapeSingle, createRangeLogTable, addToDistributionTable, createRangeQueryableTable, returnAllRanges
 from helpers.conversions import getRangeId, getStatusCode, getRangeText, scrapeAll, parseUserRequest
 from helpers.checks import checkType, rangeExist
@@ -47,10 +47,11 @@ def invalid():
 @views.route("/displayRanges")
 def displayRanges():
     rangeList = getAllRanges()
-    rangeToText = {}
+    rangeToTextPercentageDict = {}
     for range in rangeList:
-        rangeToText[getRangeText(range)]=range
-    return render_template("range.html", rangeToText=rangeToText)
+        rangeToTextPercentageDict[range]=(getRangeText(range), getScannerPercentage(range))
+    nowTime=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return render_template("range.html", rangeToTextPercentageDict=rangeToTextPercentageDict, nowTime = nowTime)
 
 @views.route('/handle_data', methods=['POST'])
 def handle_data():
@@ -122,7 +123,7 @@ def caseData(rangeId):
 def scrapeAdmin():
     rangesList = returnAllRanges()
     for range in rangesList:
-        init = Queue('default', connection=Redis())
+        init = Queue('default', connection=conn)
         dailyScrapeJob = init.enqueue('workers.batchScrape', range, retry=Retry(max=10, interval=10),job_timeout='24h')
         createRangeLogTableJob = init.enqueue('helpers.dbOperations.createRangeLogTable', range, retry=Retry(max=10, interval=10), depends_on=dailyScrapeJob)
         checkAndFillRangeLogJob = init.enqueue('workers.checkAndFillRange', range, retry=Retry(max=10, interval=10), depends_on=createRangeLogTableJob)
@@ -134,7 +135,7 @@ def scrapeAdmin():
 def populateRangeLog():
     rangesList = returnAllRanges()
     for range in rangesList:
-        init = Queue('default', connection=Redis())
+        init = Queue('default', connection=conn)
         createRangeLogTableJob = init.enqueue('helpers.dbOperations.createRangeLogTable', range, retry=Retry(max=10, interval=10))
         checkAndFillRangeLogJob = init.enqueue('workers.checkAndFillRange', range, retry=Retry(max=10, interval=10), depends_on=createRangeLogTableJob)
     return render_template("checkBacklater.html")
