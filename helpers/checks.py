@@ -96,6 +96,7 @@ def caseNotApproved(cursor, rangeId, case_number):
     dbQuery = "select statusCode from "+rangeId+" where caseNumber = %s"
     cursor.execute(dbQuery, (case_number,))
     tup = cursor.fetchone()
-    if tup[0] not in [9, 10, 11, 15]:
+    statusCode = tup[0]
+    if statusCode not in [9, 10, 11, 15] and statusCode != None:
         return True
     return False
