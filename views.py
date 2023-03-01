@@ -5,8 +5,8 @@ from h11 import Data
 from Visualizations.perCaseType.statusLineGraph import outputStatusLineGraph
 
 from helpers.getCases import getAllRanges
-from helpers.dbOperations import scrapeSingle, createRangeLogTable, addToDistributionTable, createRangeQueryableTable, returnAllRanges
-from helpers.conversions import getRangeId, getStatusCode, getRangeText, scrapeAll
+from helpers.dbOperations import getTodayApprovedCases, scrapeSingle, createRangeLogTable, addToDistributionTable, createRangeQueryableTable, returnAllRanges
+from helpers.conversions import getRangeId, getStatusCode, getRangeText, scrapeAll, parseUserRequest
 from helpers.checks import checkType, rangeExist
 from helpers.dbConnect import DatabaseConnect
 from Visualizations.caseTypePie import outputPlot
@@ -15,8 +15,7 @@ from rq import Queue, Retry
 from redis import Redis
 from constants import CASE_TYPES
 from bokeh.embed import components
-from secret import dbPwd
-from datetime import datetime
+from datetime import date, datetime
 from customWorker import conn
 
 # from Visualizations.caseTypePie import script, div
@@ -29,7 +28,9 @@ views = Blueprint(__name__, "views")
 @views.route("/")
 def home():
 
-    return render_template("home.html")
+    todayApprovedDict=getTodayApprovedCases()
+    todayString = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return render_template("home.html", todayApprovedDict=todayApprovedDict, caseTypes = CASE_TYPES, today=todayString)
 
 @views.route("/about")
 def about():
@@ -55,38 +56,31 @@ def displayRanges():
 def handle_data():
     # conn = Redis()
     init = Queue('default', connection=conn)
-    case_number = request.form['case_number']
-    petition_date = request.form['petition_date']
-    petition_type = request.form['petition_type']
-    home_country = request.form['country']
-    state = request.form['state']
-    if case_number=="" or petition_date=="" or petition_type=="" or home_country=="" or state=="":
+
+    form=parseUserRequest(request)
+    if form["case_number"]=="" or form["petition_date"]=="" or form["petition_type"]=="" or form["home_country"]=="" or form["state"]=="":
         return redirect(request.referrer)
 
+    case_number = form["case_number"]
+
     result = scrapeSingle(case_number)
-    petition_type=checkType(petition_type, result['content'])
-    rangeId=getRangeId(case_number)
-    result = scrapeSingle(case_number)
-   
-   
-       
-    #user typed in invalid case
     if result==None:
         return render_template("invalid.html")
 
+    petition_type=checkType(form["petition_type"], result['content'])
+  
     #store inquirer's information
     if petition_type!="Other":
-       
         status_code=getStatusCode(result['title']) 
         with DatabaseConnect("UserInfo") as (cnx, cursor):
             query="INSERT INTO Users (CaseNumber, CaseType, State, HomeCountry, PetitionDate, StatusCode) values(%s, %s, %s, %s, %s, %s)"
-            cursor.execute(query,(case_number, petition_type, state, home_country, petition_date, status_code))
-
+            cursor.execute(query,(case_number, petition_type, form["state"], form["home_country"], form["petition_date"], status_code))
+    #
 
     #ifRangeExists, retrieve data from DB
         #put data into visualization API
             #save charts and render on the front end
-
+    rangeId=getRangeId(case_number)
     if not rangeExist(rangeId):
         print("range Does Not Exist")
         createRangeJob = init.enqueue('helpers.dbOperations.createRangeQueryableTable', rangeId)

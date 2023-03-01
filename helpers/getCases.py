@@ -51,4 +51,8 @@ def NearApprovalAndFreshOrUnscanned(cursor, rangeId):
         list.append(tuple[0])
     return list
   
+def getCaseObj(cursor, rangeId, case_number):
+    query="select * from "+rangeId + "where caseNumber = %s"
+    cursor.execute(query, (case_number,))
+    return cursor.fetchone()
     

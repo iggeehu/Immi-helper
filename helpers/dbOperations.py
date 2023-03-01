@@ -1,3 +1,4 @@
+from constants import CASE_PREFIX, CASE_TYPES
 from secret import agentList
 from random import randint, sample as sample
 import requests
@@ -5,8 +6,8 @@ from bs4 import BeautifulSoup as bs
 import random
 from helpers.checks import rangeLogTableExist, rangeTablePopulated
 from helpers.dbConnect import DatabaseConnect, databaseConnect
-from helpers.conversions import getCasePrefix
-
+from helpers.conversions import getCasePrefix, parseUserRequest
+import datetime
 
 
 def scrapeSingle(case_number):
@@ -139,10 +140,31 @@ def returnAllRanges():
             return list
         except:
             raise ConnectionError("DB connection failed")
-        
 
+#return dict {"EAC":[(case, casetype), (case, casetype)]}        
+def getTodayApprovedCases():
+    todayApprovedDict = {}
+    for prefix in CASE_PREFIX:
+        todayApprovedDict[prefix]={}
+        for casetype in CASE_TYPES:
+            todayApprovedDict[prefix][casetype]=[]
+    with DatabaseConnect("ApprovedCasesToday") as (cnx, cursor):
+        try:
+            query="SELECT caseNumber, caseType FROM ApprovedCasesToday where ApprovalTime>now()-interval 24 hour"
+            cursor.execute(query)
+            listTups=cursor.fetchall()
+            for tup in listTups:
+                prefix = tup[0][0:3]
+                casetype = tup[1]
+                todayApprovedDict[prefix][casetype].append(tup[0])
+            return todayApprovedDict
+        except:
+            raise("Failure reaching the database")
 
-
-
-    
-            
+def addToApproved(caseNumber, caseType):
+    print("!!!!!!!!!!!NEW APPROVED CASE "+ caseNumber + "WOOHOO!!!!!!!!!!!!!!!!!!!!!!!!")
+    dt_string=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with DatabaseConnect("ApprovedCasesToday") as (cnx2approved, cursor2approved):
+        print("DatabaseConnect called " + caseNumber + caseType + dt_string)
+        addQuery = "INSERT INTO ApprovedCasesToday (CaseNumber, CaseType, ApprovalTime) values (%s, %s, %s)"
+        cursor2approved.execute(addQuery, (caseNumber, caseType,  dt_string))

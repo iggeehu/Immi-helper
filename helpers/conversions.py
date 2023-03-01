@@ -49,7 +49,6 @@ def getStatusCode(resultTitle):
         return 13
     if "New Card" in resultTitle:
         return 15
-    print("getStatusCode called14")
     return 14
 
 def getStatusText(status_code):
@@ -79,7 +78,13 @@ def getRangeText(rangeId):
 
     return casePrefix+caseMiddle+str(caseTailBegin) + "-" + casePrefix+caseMiddle+str(caseTailEnd)
 
-    
+def parseUserRequest(request):
+    case_number = request.form['case_number']
+    petition_date = request.form['petition_date']
+    petition_type = request.form['petition_type']
+    home_country = request.form['country']
+    state = request.form['state']
+    return {"case_number":case_number, "petition_date":petition_date, "petition_type":petition_type, "home_country":home_country, "state":state} 
 
 def scrapeAll(probab):
     return random.random() < probab
@@ -90,3 +95,4 @@ def handleUnknownCaseType(statusCode, caseType):
     if statusCode in [14] and caseType=="":
         return "OtherStatusUnknown"
     return caseType
+
