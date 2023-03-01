@@ -43,7 +43,9 @@ def batchScrape(rangeId, frequency:str = None):
 
                         #add case to approved list if it got approved today
                         if caseNotApproved(cursor, rangeId, caseNumber) and newStatusCode in [9,10,11,15]:
+                            print("caseNotApproved and new status is approved")
                             caseTup = getCaseObj(cursor, rangeId, caseNumber)
+                            print(caseTup[0])
                             currType = caseTup[0]
                             addToApproved(caseNumber, currType)
                 
@@ -66,7 +68,6 @@ def batchScrape(rangeId, frequency:str = None):
 
        
 
-    
 
 def checkAndFillRange(rangeId):
     if not rangeLogTableExist(rangeId):
