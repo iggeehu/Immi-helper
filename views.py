@@ -131,7 +131,7 @@ def scrapeAdmin():
 
      
 @views.route('/createRangeAll', methods=['GET'])  
-def scrapeAdmin():
+def populateRangeLog():
     rangesList = returnAllRanges()
     for range in rangesList:
         init = Queue('default', connection=conn)
