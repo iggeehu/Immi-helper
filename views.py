@@ -122,7 +122,7 @@ def caseData(rangeId):
 def scrapeAdmin():
     rangesList = returnAllRanges()
     for range in rangesList:
-        init = Queue('default', connection=conn)
+        init = Queue('default', connection=Redis())
         dailyScrapeJob = init.enqueue('workers.batchScrape', range, retry=Retry(max=10, interval=10),job_timeout='24h')
         createRangeLogTableJob = init.enqueue('helpers.dbOperations.createRangeLogTable', range, retry=Retry(max=10, interval=10), depends_on=dailyScrapeJob)
         checkAndFillRangeLogJob = init.enqueue('workers.checkAndFillRange', range, retry=Retry(max=10, interval=10), depends_on=createRangeLogTableJob)
@@ -134,7 +134,7 @@ def scrapeAdmin():
 def populateRangeLog():
     rangesList = returnAllRanges()
     for range in rangesList:
-        init = Queue('default', connection=conn)
+        init = Queue('default', connection=Redis())
         createRangeLogTableJob = init.enqueue('helpers.dbOperations.createRangeLogTable', range, retry=Retry(max=10, interval=10))
         checkAndFillRangeLogJob = init.enqueue('workers.checkAndFillRange', range, retry=Retry(max=10, interval=10), depends_on=createRangeLogTableJob)
     return render_template("checkBacklater.html")

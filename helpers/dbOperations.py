@@ -165,6 +165,9 @@ def addToApproved(caseNumber, caseType):
     print("!!!!!!!!!!!NEW APPROVED CASE "+ caseNumber + "WOOHOO!!!!!!!!!!!!!!!!!!!!!!!!")
     dt_string=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with DatabaseConnect("ApprovedCasesToday") as (cnx2approved, cursor2approved):
-        print("DatabaseConnect called " + caseNumber + caseType + dt_string)
-        addQuery = "INSERT INTO ApprovedCasesToday (CaseNumber, CaseType, ApprovalTime) values (%s, %s, %s)"
-        cursor2approved.execute(addQuery, (caseNumber, caseType,  dt_string))
+        try:
+            print("DatabaseConnect called " + caseNumber + caseType + dt_string)
+            addQuery = "INSERT INTO ApprovedCasesToday (CaseNumber, CaseType, ApprovalTime) values (%s, %s, %s)"
+            cursor2approved.execute(addQuery, (caseNumber, caseType,  dt_string))
+        except:
+            print("something went wrong when adding case to approved database")

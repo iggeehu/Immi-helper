@@ -2,10 +2,9 @@ from helpers.dbConnect import DatabaseConnect
 from helpers.conversions import getRangeId
 
 def rangeLogTableExist(rangeId):
-    with DatabaseConnect("RangeLog") as cnx:
+    with DatabaseConnect("RangeLog") as (cnx, cursor):
         tableName = "R"+rangeId
         if cnx!=None:
-            cursor = cnx.cursor()
             query = "SELECT count(*) FROM information_schema.TABLES \
             WHERE (TABLE_SCHEMA = 'RangeLog') AND (TABLE_NAME = %s)"
             cursor.execute(query, (tableName, ))
