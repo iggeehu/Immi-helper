@@ -153,10 +153,14 @@ def getTodayApprovedCases():
             query="SELECT caseNumber, caseType FROM ApprovedCasesToday where ApprovalTime>now()-interval 24 hour"
             cursor.execute(query)
             listTups=cursor.fetchall()
+            print(todayApprovedDict)
             for tup in listTups:
+                if tup[1]=="" or tup[1]==None:
+                    continue
                 prefix = tup[0][0:3]
                 casetype = tup[1]
                 todayApprovedDict[prefix][casetype].append(tup[0])
+            
             return todayApprovedDict
         except:
             raise("Failure reaching the database")
