@@ -4,8 +4,13 @@ body {
 	background-color:#F7CAC9;
 	height: auto;
 	width: 100vw;
+	overflow: scroll;
+	
 }
 
+.non-nav {
+	padding-top: 10vh;
+}
 
 
 h1 {
@@ -36,8 +41,9 @@ h3{
 	box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.22);
 	-moz-box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.22);
 	-webkit-box-shadow:  0px 0px 15px rgba(0, 0, 0, 0.22);
-
 }
+
+  
 .form-style-8 h2{
 	background: #4D4D4D;
 	text-transform: uppercase;

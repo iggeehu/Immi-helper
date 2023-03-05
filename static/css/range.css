@@ -1,13 +1,13 @@
 @import "navbar.css";
 
-body {
+html body {
 	background-color:#F7CAC9;
 	height: auto;
 	width: 100vw;
 }
 
 
-
+/* 
 h1 {
 	font-family: 'Open Sans Condensed', arial, sans;
 	text-align: center;
@@ -16,6 +16,19 @@ h1 {
 	box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.22);
 	-moz-box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.22);
 	-webkit-box-shadow:  0px 0px 15px rgba(0, 0, 0, 0.22);
+} */
+
+
+
+.ranges{
+	padding-top: 20vh;
+	padding-left: 5vh;
+	padding-right: 5vh;
+}
+
+.range-title {
+	font-family: monospace;
+	text-align: center;
 }
 
 .rangeList {
@@ -30,4 +43,9 @@ h1 {
 .range:hover{
 	box-shadow: darkgoldenrod;
 	text-decoration: underline;
+}
+
+.w3-light-grey {
+	width: 20vw;
+	margin: auto;
 }
