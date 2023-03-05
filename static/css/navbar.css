@@ -1,34 +1,35 @@
 #navbar {
-
 	background: white;
 	color: rgb(13, 26, 38);
 	position: fixed;
 	top: 0;
-	/* height: 60px; */
-	height:auto;
+	height: auto;
 	line-height: 60px;
 	width: 100vw;
 	z-index: 10;
   }
   
   .nav-wrapper {
-	background: white;
 	margin: auto;
 	text-align: center;
-	height:auto;
 	width: 70%;
-	display: flex;
-	flex-direction: row;
-	
   } @media(max-width: 768px) {
 	  .nav-wrapper {
-		width: 90%;
+		width: 100%;
+    height: auto;
 	  }
 	} @media(max-width: 638px) {
 		.nav-wrapper {
 		  width: 100%;
+      height: auto
 		}
 	  } 
+    @media(max-width: 564px) {
+      .nav-wrapper {
+        width: 100%;
+        height: auto
+      }
+      }
   
 	  a {
 		color: inherit;
@@ -39,7 +40,6 @@
 	  
   
   .logo {
-	flex-shrink: 3;
 	float: left;
 	margin-left: 28px;
 	font-size: 1.5em;
@@ -53,7 +53,6 @@
 	}
   
   #navbar ul {
-	flex-shrink: 3;
 	display: inline-block;
 	float: right;
 	list-style: none;

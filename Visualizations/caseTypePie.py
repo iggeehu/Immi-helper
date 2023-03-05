@@ -18,7 +18,8 @@ def getDistributionData(rangeId):
     cursor.execute(query, (rangeId,))
 
     result = {}
-    listOfValues = list(cursor.fetchone()[1:])
+    fetched = cursor.fetchone()
+    listOfValues = list(fetched[1:])
     listOfKeys = ["I485", "I765", "I129", "I130", "N400", "I539", 
     "I131", "I821", "Approved Unknown", "I140", "I90", "I824", "I751", "Invalid", "Other Unknown"]
 

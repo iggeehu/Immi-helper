@@ -17,7 +17,7 @@ from constants import CASE_TYPES
 from bokeh.embed import components
 from datetime import date, datetime
 from customWorker import conn
-
+# conn=Redis()
 # from Visualizations.caseTypePie import script, div
 
 
