@@ -75,8 +75,12 @@ def handle_data():
     if petition_type!="Other":
         status_code=getStatusCode(result['title']) 
         with DatabaseConnect("UserInfo") as (cnx, cursor):
-            query="INSERT INTO Users (CaseNumber, CaseType, State, HomeCountry, PetitionDate, StatusCode) values(%s, %s, %s, %s, %s, %s)"
-            cursor.execute(query,(case_number, petition_type, form["state"], form["home_country"], form["petition_date"], status_code))
+            query="Select count(*) from UserInfo where CaseNumber=%s"
+            cursor.execute(query, (case_number,))
+            tup = cursor.fetchone()
+            if tup[0]==0:
+                query="INSERT INTO UserInfo (CaseNumber, CaseSubType, State, HomeCountry, PetitionDate, StatusCode) values(%s, %s, %s, %s, %s, %s)"
+                cursor.execute(query,(case_number, petition_type, form["state"], form["home_country"], form["petition_date"], status_code))
     #
 
     #ifRangeExists, retrieve data from DB

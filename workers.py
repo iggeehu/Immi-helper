@@ -47,7 +47,8 @@ def batchScrape(rangeId, frequency:str = None):
                             caseTup = getCaseObj(cursor, rangeId, caseNumber)
                             print(caseTup[0])
                             currType = caseTup[0]
-                            addToApproved(caseNumber, currType)
+                            inputType = currType if currType!=None else newCaseType
+                            addToApproved(caseNumber, inputType)
                 
                         query ="UPDATE " +rangeId+ " SET statusCode = %s, lastFetched = %s, caseType = %s WHERE CaseNumber = %s"
                         cursor.execute(query, (newStatusCode, dt_string, newCaseType, caseNumber))
@@ -76,7 +77,9 @@ def checkAndFillRange(rangeId):
         tableName = "R"+rangeId
         now = datetime.datetime.now()
     
-        caseTypes = {"I-140":0,"I-765":0,"I-821":0,"I-131":0,"I-129":0,"I-539":0,"I-130":0,"I-90":0,"I-485":0,"N-400":0,"I-751":0, "I-824":0, "Approv":0, "OtherS":0}
+        caseTypes = {"I-140":0,"I-765":0,"I-821":0,"I-131":0,"I-129":0,
+        "I-539":0,"I-130":0,"I-90":0,"I-485":0,"N-400":0,"I-751":0, 
+        "I-824":0, "Approv":0, "OtherS":0}
 
         for caseType in caseTypes.keys():
             with DatabaseConnect("QueryableCases") as (cnx2,cursor2):   

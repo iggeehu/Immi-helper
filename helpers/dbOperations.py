@@ -154,6 +154,7 @@ def getTodayApprovedCases():
             cursor.execute(query)
             listTups=cursor.fetchall()
             for tup in listTups:
+                print(tup)
                 prefix = tup[0][0:3]
                 casetype = tup[1]
                 todayApprovedDict[prefix][casetype].append(tup[0])
