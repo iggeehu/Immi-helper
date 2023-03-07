@@ -87,7 +87,7 @@ def checkAndFillRange(rangeId):
 
             statusCodesDict ={"Received":0, "ActiveReview":0, "RFEreq":0, 
             "RFErec":0, "IntReady":0, "IntSched":0, "Denied":0, 
-            "Approved":0, "Other":0}
+            "Approved":0, "Other":0, "FingTaken":0, "Transferred":0}
             for tup in statusCodesTups:
                 if tup[0]==1:
                     statusCodesDict["Received"]+=1
@@ -107,26 +107,31 @@ def checkAndFillRange(rangeId):
                     statusCodesDict["Approved"]+=1
                 if tup[0]==14:
                     statusCodesDict["Other"]+=1
+                if tup[0]==8:
+                    statusCodesDict["FingTaken"]+=1
+                if tup[0]==16:
+                    statusCodesDict["Transferred"]+=1
                 
 
             # initial insert unless today's already filled
             insertQueryWhenNoDuplicate= "\
                 INSERT INTO "+tableName+" (CollectionDate, CaseType, Received,  \
-                ActiveReview, RFEreq, RFErec, IntReady, IntSched, Denied, Approved, Other)   \
-                select %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s \
+                ActiveReview, RFEreq, RFErec, IntReady, IntSched, Denied, Approved, Other, FingTaken, Transferred)   \
+                select %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s \
                 where NOT EXISTS(select * from " +tableName+" where CollectionDate=%s and CaseType=%s)"
                 
             cursor.execute(insertQueryWhenNoDuplicate, (now.strftime("%Y-%m-%d"), caseType,
             statusCodesDict["Received"],statusCodesDict["ActiveReview"], 
             statusCodesDict["RFEreq"],statusCodesDict["RFErec"],
             statusCodesDict["IntReady"], statusCodesDict["IntSched"],
-            statusCodesDict["Denied"], statusCodesDict["Approved"], statusCodesDict["Other"],
+            statusCodesDict["Denied"], statusCodesDict["Approved"], statusCodesDict["Other"], 
+            statusCodesDict["FingTaken"], statusCodesDict["Transferred"],
             now.strftime("%Y-%m-%d"), caseType))
 
             #if filled, update
             insertQueryWhenDuplicate ="UPDATE "+tableName+" set Received=%s,  \
                 ActiveReview=%s, RFEreq=%s, RFErec=%s, IntReady=%s, IntSched=%s, \
-                Denied=%s, Approved=%s, Other=%s   \
+                Denied=%s, Approved=%s, Other=%s, FingTaken=%s, Transferred=%s   \
                 where CollectionDate=%s and CaseType=%s"
             
 
@@ -135,6 +140,7 @@ def checkAndFillRange(rangeId):
             statusCodesDict["RFEreq"],statusCodesDict["RFErec"], 
             statusCodesDict["IntReady"], statusCodesDict["IntSched"], 
             statusCodesDict["Denied"], statusCodesDict["Approved"], statusCodesDict["Other"], 
+            statusCodesDict["FingTaken"], statusCodesDict["Transferred"],
             now.strftime("%Y-%m-%d"), caseType))
 
            

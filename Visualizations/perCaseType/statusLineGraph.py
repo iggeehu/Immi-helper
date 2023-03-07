@@ -6,7 +6,7 @@ from constants import CASE_TYPES
 from bokeh.models import DatetimeTickFormatter, Legend, LegendItem
 import numpy as np
 import pandas as pd
-from bokeh.palettes import Category20_9
+from bokeh.palettes import Category20_10
 
 def getStatusDataPerType(rangeId, caseType):
     cnx = databaseConnect("RangeLog")
@@ -23,9 +23,11 @@ def getStatusDataPerType(rangeId, caseType):
         denied = []
         RFEreq = []
         IntSched = []
-        Other =[]
+        FingTaken =[]
+        Transferred=[]
         IntReady=[]
         RFErec = []
+        Other = []
         for tup in result:
             collectionDates.append(tup[1])
             approved.append(tup[3])
@@ -37,7 +39,10 @@ def getStatusDataPerType(rangeId, caseType):
             Other.append(tup[9])
             IntReady.append(tup[(10)])
             RFErec.append(tup[11])
-        return [collectionDates, approved,received,activeReview,denied,RFEreq, IntSched, Other,IntReady,RFErec]
+            FingTaken.append(tup[12])
+            Transferred.append(tup[13])
+            
+        return [collectionDates, approved,received,activeReview,denied,RFEreq, IntSched, Other, IntReady,RFErec,FingTaken, Transferred]
     except:
         return None
 
@@ -52,11 +57,13 @@ def outputStatusLineGraph(rangeId):
        
         dates = pd.to_datetime(result[0])
         labels=["Case Received", "Active Review",  "RFE requested", "RFE received",
-                "Interview Ready", "Interview Scheduled", "Approved", "Denied", "Other"]
+                "Interview Ready", "Interview Scheduled", "Approved", "Denied", 
+                "Fingerprints Taken", "Transferred", "Other"]
         data = {"Approved":result[1], "Case Received":result[2], "date": dates, 
                 "Active Review":result[3], "Denied":result[4], "RFE requested":result[5], 
                 "Interview Scheduled":result[6], "Other":result[7], "Interview Ready":result[8], 
-                "RFE received":result[9],
+                "RFE received":result[9], "Fingerprints Taken": result[10],
+                "Transferred": result[11]
                 }
         
 
@@ -68,8 +75,8 @@ def outputStatusLineGraph(rangeId):
         dictOfGraphs[caseType].title.text = 'Number of Cases by Status, Over Time'
         legendItems = []
 
-        for i in range(9):
-            r= dictOfGraphs[caseType].line(dates, data[labels[i]], line_color=Category20_9[i])
+        for i in range(10):
+            r= dictOfGraphs[caseType].line(dates, data[labels[i]], line_color=Category20_10[i])
             item= LegendItem(label=labels[i], renderers=[r], index=i)
             legendItems.append(item)
 

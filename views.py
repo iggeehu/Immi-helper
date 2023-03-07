@@ -10,14 +10,15 @@ from helpers.conversions import getRangeId, getStatusCode, getRangeText, scrapeA
 from helpers.checks import checkType, rangeExist
 from helpers.dbConnect import DatabaseConnect
 from Visualizations.caseTypePie import outputPlot
-from workers import batchScrape
+from workers import batchScrape, checkAndFillRange
 from rq import Queue, Retry
 from redis import Redis
 from constants import CASE_TYPES
 from bokeh.embed import components
 from datetime import date, datetime
 from customWorker import conn
-# conn=Redis()
+
+conn=Redis()
 # from Visualizations.caseTypePie import script, div
 
 
@@ -136,7 +137,9 @@ def populateRangeLog():
     rangesList = returnAllRanges()
     for range in rangesList:
         init = Queue('default', connection=conn)
-        createRangeLogTableJob = init.enqueue('helpers.dbOperations.createRangeLogTable', range, retry=Retry(max=10, interval=10))
-        checkAndFillRangeLogJob = init.enqueue('workers.checkAndFillRange', range, retry=Retry(max=10, interval=10), depends_on=createRangeLogTableJob)
+        createRangeLogTable(range)
+        checkAndFillRange(range)
+        # createRangeLogTableJob = init.enqueue('helpers.dbOperations.createRangeLogTable', range, retry=Retry(max=10, interval=10))
+        # checkAndFillRangeLogJob = init.enqueue('workers.checkAndFillRange', range, retry=Retry(max=10, interval=10), depends_on=createRangeLogTableJob)
     return render_template("checkBacklater.html")
  

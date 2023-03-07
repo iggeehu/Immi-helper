@@ -21,6 +21,8 @@ def getStatusCode(resultTitle):
         return 1
     if "Actively Reviewed" in resultTitle:
         return 2
+    if "Review" in resultTitle:
+        return 2
     if "Evidence" in resultTitle:
         if "Sent" in resultTitle:
             return 3
@@ -45,10 +47,14 @@ def getStatusCode(resultTitle):
         return 10
     if "Delivered" in resultTitle:
         return 11
+    if "Mailed" in resultTitle:
+        return 11
     if "Certificate Of Naturalization" in resultTitle:
         return 13
     if "New Card" in resultTitle:
         return 15
+    if "Transferred" in resultTitle:
+        return 16
     return 14
 
 def getStatusText(status_code):
