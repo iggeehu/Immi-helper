@@ -1,6 +1,6 @@
 from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure, show
-from helpers.dbConnect import databaseConnect
+from helpers.dbConnect import DatabaseConnect, databaseConnect
 from bokeh.embed import components
 from constants import CASE_TYPES
 from bokeh.models import DatetimeTickFormatter, Legend, LegendItem
@@ -9,42 +9,42 @@ import pandas as pd
 from bokeh.palettes import Category20_10
 
 def getStatusDataPerType(rangeId, caseType):
-    cnx = databaseConnect("RangeLog")
-    cursor = cnx.cursor()
-    tableName = "R"+rangeId
-    query = "Select * from "+tableName +" where caseType = %s"
-    try:
-        cursor.execute(query, (caseType,))
-        result = cursor.fetchall()
-        collectionDates = []
-        approved = []
-        received = []
-        activeReview =[]
-        denied = []
-        RFEreq = []
-        IntSched = []
-        FingTaken =[]
-        Transferred=[]
-        IntReady=[]
-        RFErec = []
-        Other = []
-        for tup in result:
-            collectionDates.append(tup[1])
-            approved.append(tup[3])
-            received.append(tup[4])
-            activeReview.append(tup[5])
-            denied.append(tup[6])
-            RFEreq.append(tup[7])
-            IntSched.append(tup[8])
-            Other.append(tup[9])
-            IntReady.append(tup[(10)])
-            RFErec.append(tup[11])
-            FingTaken.append(tup[12])
-            Transferred.append(tup[13])
-            
-        return [collectionDates, approved,received,activeReview,denied,RFEreq, IntSched, Other, IntReady,RFErec,FingTaken, Transferred]
-    except:
-        return None
+
+    with DatabaseConnect("RangeLog") as (cnx, cursor):
+        tableName = "R"+rangeId
+        query = "Select * from "+tableName +" where caseType = %s"
+        try:
+            cursor.execute(query, (caseType,))
+            result = cursor.fetchall()
+            collectionDates = []
+            approved = []
+            received = []
+            activeReview =[]
+            denied = []
+            RFEreq = []
+            IntSched = []
+            FingTaken =[]
+            Transferred=[]
+            IntReady=[]
+            RFErec = []
+            Other = []
+            for tup in result:
+                collectionDates.append(tup[1])
+                approved.append(tup[3])
+                received.append(tup[4])
+                activeReview.append(tup[5])
+                denied.append(tup[6])
+                RFEreq.append(tup[7])
+                IntSched.append(tup[8])
+                Other.append(tup[9])
+                IntReady.append(tup[(10)])
+                RFErec.append(tup[11])
+                FingTaken.append(tup[12])
+                Transferred.append(tup[13])
+                
+            return [collectionDates, approved,received,activeReview,denied,RFEreq, IntSched, Other, IntReady,RFErec,FingTaken, Transferred]
+        except:
+            return None
 
 
 def outputStatusPerTypeDictAndGraph(rangeId):

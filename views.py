@@ -16,12 +16,11 @@ from redis import Redis
 from constants import CASE_TYPES
 from bokeh.embed import components
 from datetime import date, datetime
+import os
+import json
 from customWorker import conn
 
-# conn=Redis()
-# from Visualizations.caseTypePie import script, div
-
-
+# conn = Redis()
 
 
 views = Blueprint(__name__, "views")
@@ -41,23 +40,25 @@ def about():
 def contact():
     return render_template("contact.html")
 
-@views.route("/invalid")
-def invalid():
-    return render_template("invalid.html")
-
 @views.route("/displayRanges")
 def displayRanges():
-    rangeList = getAllRanges()
-    rangeToTextPercentageDict = {}
-    for range in rangeList:
-        rangeToTextPercentageDict[range]=(getRangeText(range), getScannerPercentage(range))
+  
+    #if deployed
+    #webCache = Redis.from_url(redis_url)
+    redisResult = conn.get("rangeToTextPercentageDict")
+    if redisResult:
+        rangeToTextPercentageDict = json.loads(redisResult)
+    else:
+        rangeList = getAllRanges()
+        rangeToTextPercentageDict = {}
+        for range in rangeList:
+            rangeToTextPercentageDict[range]=(getRangeText(range), getScannerPercentage(range))
+        conn.set("rangeToTextPercentageDict", json.dumps(rangeToTextPercentageDict), ex=300)
     nowTime=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     return render_template("range.html", rangeToTextPercentageDict=rangeToTextPercentageDict, nowTime = nowTime)
 
 @views.route('/handle_data', methods=['POST'])
 def handle_data():
-    # conn = Redis()
-    init = Queue('default', connection=conn)
 
     form=parseUserRequest(request)
     if form["case_number"]=="" or form["petition_date"]=="" or form["petition_type"]=="" or form["home_country"]=="" or form["state"]=="":
@@ -81,54 +82,66 @@ def handle_data():
             if tup[0]==0:
                 query="INSERT INTO UserInfo (CaseNumber, CaseSubType, State, HomeCountry, PetitionDate, StatusCode) values(%s, %s, %s, %s, %s, %s)"
                 cursor.execute(query,(case_number, petition_type, form["state"], form["home_country"], form["petition_date"], status_code))
-    #
-
-    #ifRangeExists, retrieve data from DB
-        #put data into visualization API
-            #save charts and render on the front end
+    
     rangeId=getRangeId(case_number)
     if not rangeExist(rangeId):
-        print("range Does Not Exist")
-        createRangeJob = init.enqueue('helpers.dbOperations.createRangeQueryableTable', rangeId)
-        populateRangeJob=init.enqueue('helpers.dbOperations.populateRangeTable', rangeId, retry=Retry(max=10, interval=10), 
+        userPromptedWorkerQueue = Queue('default', connection=conn)
+
+        createRangeJob = userPromptedWorkerQueue.enqueue('helpers.dbOperations.createRangeQueryableTable', rangeId)
+        populateRangeJob=userPromptedWorkerQueue.enqueue('helpers.dbOperations.populateRangeTable', rangeId, retry=Retry(max=10, interval=10), 
         depends_on=createRangeJob, job_timeout='24h')
-        initScrapeJob = init.enqueue('workers.batchScrape', rangeId, retry=Retry(max=10, interval=10), depends_on=populateRangeJob)
-        addToDistributionTableJob=init.enqueue('helpers.dbOperations.addToDistributionTable', rangeId, retry=Retry(max=10, interval=10), depends_on=initScrapeJob)
-        createRangeLogTableJob=init.enqueue('helpers.dbOperations.createRangeLogTable', rangeId, retry=Retry(max=10, interval=10), depends_on=initScrapeJob)
+        initScrapeJob = userPromptedWorkerQueue.enqueue('workers.batchScrape', rangeId, retry=Retry(max=10, interval=10), depends_on=populateRangeJob)
+        addToDistributionTableJob=userPromptedWorkerQueue.enqueue('helpers.dbOperations.addToDistributionTable', rangeId, retry=Retry(max=10, interval=10), depends_on=initScrapeJob)
+        createRangeLogTableJob=userPromptedWorkerQueue.enqueue('helpers.dbOperations.createRangeLogTable', rangeId, retry=Retry(max=10, interval=10), depends_on=initScrapeJob)
         return render_template("checkBacklater.html")
     else:
-        populateRangeJob=init.enqueue('helpers.dbOperations.populateRangeTable', rangeId, retry=Retry(max=10, interval=10),job_timeout='24h')
-        dailyScrapeJob = init.enqueue('workers.batchScrape', rangeId, retry=Retry(max=10, interval=10),job_timeout='24h', depends_on= populateRangeJob)
-        createRangeLogTableJob = init.enqueue('helpers.dbOperations.createRangeLogTable', rangeId, retry=Retry(max=10, interval=10), depends_on=dailyScrapeJob)
-        checkAndFillRangeLogJob = init.enqueue('workers.checkAndFillRange', rangeId, retry=Retry(max=10, interval=10), depends_on=createRangeLogTableJob)
-        addToDistributionTable(rangeId)
+        # populateRangeJob=init.enqueue('helpers.dbOperations.populateRangeTable', rangeId, retry=Retry(max=10, interval=10),job_timeout='24h')
+        # dailyScrapeJob = init.enqueue('workers.batchScrape', rangeId, retry=Retry(max=10, interval=10),job_timeout='24h', depends_on= populateRangeJob)
+        # createRangeLogTableJob = init.enqueue('helpers.dbOperations.createRangeLogTable', rangeId, retry=Retry(max=10, interval=10), depends_on=dailyScrapeJob)
+        # checkAndFillRangeLogJob = init.enqueue('workers.checkAndFillRange', rangeId, retry=Retry(max=10, interval=10), depends_on=createRangeLogTableJob)
+        # addToDistributionTable(rangeId)
         return redirect(url_for('views.caseData', rangeId = rangeId))
 
+@views.route("/invalid")
+def invalid():
+    return render_template("invalid.html")
+    
 @views.route('/caseData/<rangeId>', methods=['GET'])
 def caseData(rangeId):
-    distGraph, dataTable = outputPlot(rangeId)
-    statusGraphDict=outputStatusPerTypeDictAndGraph(rangeId)
-
+    script = conn.get("script").decode('ASCII')
+    divDist = conn.get("divDist").decode('ASCII')
+    divTable = conn.get("divTable").decode('ASCII')
+    dataByTypeDict = json.loads(conn.get("dataByTypeDict")) if conn.get("dataByTypeDict")!=None else None
+    statusGraphDict=json.loads(conn.get("statusGraphDict")) if conn.get("statusGraphDict")!=None else None
+    if script == None or divDist == None or divTable ==None or dataByTypeDict ==None or statusGraphDict ==None:
+        distGraph, dataTable = outputPlot(rangeId)
+        statusGraphDict=outputStatusPerTypeDictAndGraph(rangeId)
     #{'I-485':[date, 135, 543, 654,....], 'I-765':[date, 453, 21, 54, ...]}
    
     #{'I-485': , 'I-765': 834, ...}
-    dataByTypeDict = getStatusDataPerTypeDict(rangeId)
-    print(dataByTypeDict)
-
-    if statusGraphDict==None:
-        return render_template("checkBacklater.html")
-    else:
-        script, divTups = components((distGraph, dataTable, *statusGraphDict.values()))
-        divDist = divTups[0]
-        divTable = divTups[1]
-        caseTypeDivs = divTups[2:]
-        DivDicts = {}
-        i=0
-        for key in statusGraphDict.keys():
-            statusGraphDict[key]=caseTypeDivs[i]
-            i+=1
-        return render_template("caseData.html", rangeText=getRangeText(rangeId), 
-        script = script, divDist = divDist, divTable = divTable, dataByTypeDict=dataByTypeDict, statusGraphDict=statusGraphDict)
+        dataByTypeDict = getStatusDataPerTypeDict(rangeId)
+        if statusGraphDict==None:
+            return render_template("checkBacklater.html")
+        else:
+            script, divTups = components((distGraph, dataTable, *statusGraphDict.values()))
+            divDist = divTups[0]
+            print(divDist)
+            divTable = divTups[1]
+            caseTypeDivs = divTups[2:]
+            DivDicts = {}
+            i=0
+            for key in statusGraphDict.keys():
+                statusGraphDict[key]=caseTypeDivs[i]
+                i+=1
+        conn.set("script", script, ex=300)
+        conn.set("divDist", divDist, ex=300)
+        conn.set("divTable", divTable, ex=300)
+        conn.set("dataByTypeDict", json.dumps(dataByTypeDict), ex=300)
+        conn.set("statusGraphDict", json.dumps(statusGraphDict), ex=300)
+        
+    
+    return render_template("caseData.html", rangeText=getRangeText(rangeId), 
+    script = script, divDist = divDist, divTable = divTable, dataByTypeDict=dataByTypeDict, statusGraphDict=statusGraphDict)
      
 
 @views.route('/scrapeAll', methods=['GET'])  
@@ -147,6 +160,7 @@ def scrapeAdmin():
 def populateRangeLog():
     rangesList = returnAllRanges()
     for range in rangesList:
+        
         init = Queue('default', connection=conn)
         createRangeLogTable(range)
         checkAndFillRange(range)

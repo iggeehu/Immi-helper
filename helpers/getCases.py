@@ -77,7 +77,6 @@ def getStatusDataPerTypeDict(rangeId):
             result = cursor.fetchone()
             statusCountSegmentTuple = result[3:14]
             
-            print(result)
             count = 0
             for i in range(3, 14):
                 count+=result[i]
