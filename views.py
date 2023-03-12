@@ -108,9 +108,9 @@ def invalid():
     
 @views.route('/caseData/<rangeId>', methods=['GET'])
 def caseData(rangeId):
-    script = conn.get("script").decode('ASCII')
-    divDist = conn.get("divDist").decode('ASCII')
-    divTable = conn.get("divTable").decode('ASCII')
+    script = conn.get("script").decode('ASCII') if conn.get("script")!=None else None
+    divDist = conn.get("divDist").decode('ASCII') if conn.get("divDist")!=None else None
+    divTable = conn.get("divTable").decode('ASCII') if conn.get("divDist")!=None else None
     dataByTypeDict = json.loads(conn.get("dataByTypeDict")) if conn.get("dataByTypeDict")!=None else None
     statusGraphDict=json.loads(conn.get("statusGraphDict")) if conn.get("statusGraphDict")!=None else None
     if script == None or divDist == None or divTable ==None or dataByTypeDict ==None or statusGraphDict ==None:
