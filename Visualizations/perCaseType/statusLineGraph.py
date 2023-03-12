@@ -47,23 +47,23 @@ def getStatusDataPerType(rangeId, caseType):
         return None
 
 
-def outputStatusLineGraph(rangeId):
+def outputStatusPerTypeDictAndGraph(rangeId):
     dictOfGraphs = {}
     
     for caseType in CASE_TYPES:    
-        result = getStatusDataPerType(rangeId, caseType)
-        if result==None:
+        statusCount = getStatusDataPerType(rangeId, caseType)
+        if statusCount==None:
             return None
        
-        dates = pd.to_datetime(result[0])
+        dates = pd.to_datetime(statusCount[0])
         labels=["Case Received", "Active Review",  "RFE requested", "RFE received",
                 "Interview Ready", "Interview Scheduled", "Approved", "Denied", 
                 "Fingerprints Taken", "Transferred", "Other"]
-        data = {"Approved":result[1], "Case Received":result[2], "date": dates, 
-                "Active Review":result[3], "Denied":result[4], "RFE requested":result[5], 
-                "Interview Scheduled":result[6], "Other":result[7], "Interview Ready":result[8], 
-                "RFE received":result[9], "Fingerprints Taken": result[10],
-                "Transferred": result[11]
+        data = {"Approved":statusCount[1], "Case Received":statusCount[2], "date": dates, 
+                "Active Review":statusCount[3], "Denied":statusCount[4], "RFE requested":statusCount[5], 
+                "Interview Scheduled":statusCount[6], "Other":statusCount[7], "Interview Ready":statusCount[8], 
+                "RFE received":statusCount[9], "Fingerprints Taken": statusCount[10],
+                "Transferred": statusCount[11]
                 }
         
 

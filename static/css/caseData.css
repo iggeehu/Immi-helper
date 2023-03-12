@@ -6,10 +6,13 @@ body {
 	background-color:#F7CAC9;
 	height: auto;
 	width: 100vw;
+
 }
 
 #realBody {
-	padding-top: 7%
+	padding-top: 7%;
+	padding-left: 7%;
+	padding-right: 7%
 
 }
 
@@ -119,3 +122,6 @@ opacity: 1;
 transition: all 0.35s;
 }
 
+.tab-text{
+	font-family: monospace
+}

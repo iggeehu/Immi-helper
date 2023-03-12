@@ -1,3 +1,4 @@
+from constants import CASE_TYPES
 from helpers.conversions import getCasePrefix
 from random import sample
 
@@ -52,7 +53,9 @@ def casesNeverScanned(cursor, rangeId):
     return list
 
 def NearApprovalAndFreshOrUnscanned(cursor, rangeId):
-    query="Select CaseNumber from "+ rangeId +" where (StatusCode in (2, 4, 5, 6, 8, 14) and DATE(LastFetched) != CURDATE()) or (LastFetched is null)"
+    query="Select CaseNumber from "+ rangeId +" where (StatusCode \
+        in (2, 4, 5, 6, 8, 14) and DATE(LastFetched) != CURDATE()) \
+            or (LastFetched is null)"
     cursor.execute(query)
     list=[]
     for tuple in cursor.fetchall():
@@ -63,4 +66,21 @@ def getCaseObj(cursor, rangeId, case_number):
     query="select * from "+rangeId + " where caseNumber = %s"
     cursor.execute(query, (case_number,))
     return cursor.fetchone()
-    
+
+def getStatusDataPerTypeDict(rangeId):
+    dict = {}
+    with DatabaseConnect("RangeLog") as (cnx, cursor):
+        for caseType in CASE_TYPES:
+            tableName = 'R' + rangeId
+            query="select * from "+tableName+" where caseType = %s and CollectionDate=curdate()"
+            cursor.execute(query, (caseType,))
+            result = cursor.fetchone()
+            statusCountSegmentTuple = result[3:14]
+            
+            print(result)
+            count = 0
+            for i in range(3, 14):
+                count+=result[i]
+            StatusCountSegmentTupleWithTotal=statusCountSegmentTuple+(count,)
+            dict[caseType]=StatusCountSegmentTupleWithTotal
+    return dict

@@ -2,9 +2,9 @@ from concurrent.futures.thread import _worker
 from flask import Blueprint, render_template, request, redirect, url_for
 from bs4 import BeautifulSoup as bs
 from h11 import Data
-from Visualizations.perCaseType.statusLineGraph import outputStatusLineGraph
+from Visualizations.perCaseType.statusLineGraph import outputStatusPerTypeDictAndGraph
 
-from helpers.getCases import getAllRanges, getScannerPercentage
+from helpers.getCases import getAllRanges, getStatusDataPerTypeDict, getScannerPercentage
 from helpers.dbOperations import getTodayApprovedCases, scrapeSingle, createRangeLogTable, addToDistributionTable, createRangeQueryableTable, returnAllRanges
 from helpers.conversions import getRangeId, getStatusCode, getRangeText, scrapeAll, parseUserRequest
 from helpers.checks import checkType, rangeExist
@@ -107,7 +107,14 @@ def handle_data():
 @views.route('/caseData/<rangeId>', methods=['GET'])
 def caseData(rangeId):
     distGraph, dataTable = outputPlot(rangeId)
-    statusGraphDict = outputStatusLineGraph(rangeId)
+    statusGraphDict=outputStatusPerTypeDictAndGraph(rangeId)
+
+    #{'I-485':[date, 135, 543, 654,....], 'I-765':[date, 453, 21, 54, ...]}
+   
+    #{'I-485': , 'I-765': 834, ...}
+    dataByTypeDict = getStatusDataPerTypeDict(rangeId)
+    print(dataByTypeDict)
+
     if statusGraphDict==None:
         return render_template("checkBacklater.html")
     else:
@@ -121,7 +128,7 @@ def caseData(rangeId):
             statusGraphDict[key]=caseTypeDivs[i]
             i+=1
         return render_template("caseData.html", rangeText=getRangeText(rangeId), 
-        script = script, divDist = divDist, divTable = divTable, statusGraphDict=statusGraphDict)
+        script = script, divDist = divDist, divTable = divTable, dataByTypeDict=dataByTypeDict, statusGraphDict=statusGraphDict)
      
 
 @views.route('/scrapeAll', methods=['GET'])  

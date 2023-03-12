@@ -24,12 +24,7 @@
       height: auto
 		}
 	  } 
-    @media(max-width: 564px) {
-      .nav-wrapper {
-        width: 100%;
-        height: auto
-      }
-      }
+    
   
 	  a {
 		color: inherit;

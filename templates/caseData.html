@@ -73,7 +73,31 @@
                 <div class="tab">
                     <input type="radio" name="css-tabs" id="{{caseType}}" checked class="tab-switch">
                     <label for="{{caseType}}" class="tab-label">{{caseType}}</label>
-                    <div class="tab-content">{{statusGraphDict[caseType] | safe}}</div>
+                    <div class="tab-content">
+                        <div class="tab-text">
+                            <div>
+                            Total: {{dataByTypeDict[caseType][11]}}
+                            </div>
+                            <br>
+                            <div>
+                            Received: {{dataByTypeDict[caseType][1]}}; 
+                            Active Review: {{dataByTypeDict[caseType][2]}}; 
+                            RFE Requested: {{dataByTypeDict[caseType][4]}}; 
+                            </div>
+                            <div>
+                            Ready For Interview: {{dataByTypeDict[caseType][7]}}; 
+                            Interview Scheduled: {{dataByTypeDict[caseType][5]}}; 
+                            </div>
+                            <br>
+                            <div>
+                            Approved: {{dataByTypeDict[caseType][0]}}; 
+                            Denied: {{dataByTypeDict[caseType][3]}}
+                            </div>
+                            </div>
+                            <br>
+                            <br>
+                            {{statusGraphDict[caseType] | safe}}
+                    </div>
                 </div>
                 {%endfor%}
             </div>

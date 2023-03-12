@@ -47,7 +47,7 @@ def batchScrape(rangeId, frequency:str = None):
                             caseTup = getCaseObj(cursor, rangeId, caseNumber)
                             print(caseTup[0])
                             currType = caseTup[0]
-                            inputType = currType if currType!=None else newCaseType
+                            inputType = newCaseType if (newCaseType!=None and newCaseType!="") else currType
                             addToApproved(caseNumber, inputType)
                 
                         query ="UPDATE " +rangeId+ " SET statusCode = %s, lastFetched = %s, caseType = %s WHERE CaseNumber = %s"
