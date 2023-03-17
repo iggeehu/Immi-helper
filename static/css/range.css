@@ -4,6 +4,7 @@ html body {
 	background-color:#F7CAC9;
 	height: auto;
 	width: 100vw;
+	font-family: 'Open Sans Condensed', arial, sans;
 }
 
 
@@ -32,6 +33,7 @@ h1 {
 }
 
 .rangeList {
+
 	text-align: center;
 	text-decoration: none;
 }

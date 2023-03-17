@@ -22,7 +22,7 @@
     <nav id="navbar" class="">
         <div class="nav-wrapper">
           <div class="logo">
-            <a href="{{url_for('views.home')}}"><i class="fa fa-angellist"></i>IMMIGENCE: Your USCIS insights</a>
+            <a href="{{url_for('views.home')}}"><i class="fa fa-angellist"></i>IMMIGENCE<a href="{{url_for('views.home')}}" class='second-logo'>: Your USCIS insights</a></a>
           </div>
           <ul id="menu">
             <li><a href="{{url_for('views.home')}}">Home</a></li>
@@ -33,7 +33,12 @@
         </div>
       </nav>
 
+    <div class="marquee">
+        <marquee scrolldelay="100"><font size="3" face="Verdana"><font color="#BC8F8F">{{banner}}</marquee>
+    </div>
+      
     <div class="non-nav">
+        
         <form action="{{ url_for('views.handle_data') }}" method="post" name="user_submission" class="form-style-8">
 
             <label for='case_number'>Type in your case number to query your case range data:</label>

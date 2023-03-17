@@ -5,30 +5,46 @@
 	top: 0;
 	height: auto;
 	line-height: 60px;
-	width: 100vw;
+	width: 100%;
 	z-index: 10;
   }
   
   .nav-wrapper {
 	margin: auto;
 	text-align: center;
-	width: 70%;
-  } @media(max-width: 768px) {
+	width: 100vw;
+  } 
+  
+  	@media(max-width: 768px) {
 	  .nav-wrapper {
-		width: 100%;
+		width: 100vw;
     height: auto;
 	  }
-	} @media(max-width: 638px) {
+	  
+	} 
+	@media(max-width: 638px) {
 		.nav-wrapper {
-		  width: 100%;
-      height: auto
+		  width: 100vw;
+      	  height: auto
+		}
+		.second-logo{
+			visibility: hidden;
+		}
+	  } 
+	@media(max-width: 375px) {
+		.nav-wrapper {
+		  width: 100vw;
+      	height: auto
+		}
+		.second-logo{
+			visibility: hidden;
 		}
 	  } 
     
   
 	  a {
 		color: inherit;
-		font-family: inherit;
+		font-family: 'Open Sans Condensed', arial, sans;
 		font-size: inherit;
 		text-decoration: none;
 	  }
