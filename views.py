@@ -10,27 +10,29 @@ from helpers.conversions import getRangeId, getStatusCode, getRangeText, scrapeA
 from helpers.checks import checkType, rangeExist
 from helpers.dbConnect import DatabaseConnect
 from Visualizations.caseTypePie import outputPlot
-from workers import batchScrape, checkAndFillRange
+from workers import checkAndFillRange
 from rq import Queue, Retry
 from redis import Redis
+import json
 from constants import CASE_TYPES
 from bokeh.embed import components
 from datetime import date, datetime
-import os
-import json
+from helpers.htmlHelpers import getWorkerBannerText
 from customWorker import conn
-
 # conn = Redis()
+
+# 
 
 
 views = Blueprint(__name__, "views")
 
 @views.route("/")
 def home():
-
+ 
+    banner=getWorkerBannerText()
     todayApprovedDict=getTodayApprovedCases()
     todayString = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    return render_template("home.html", todayApprovedDict=todayApprovedDict, caseTypes = CASE_TYPES, today=todayString)
+    return render_template("home.html", banner=banner, todayApprovedDict=todayApprovedDict, caseTypes = CASE_TYPES, today=todayString)
 
 @views.route("/about")
 def about():
@@ -95,11 +97,6 @@ def handle_data():
         createRangeLogTableJob=userPromptedWorkerQueue.enqueue('helpers.dbOperations.createRangeLogTable', rangeId, retry=Retry(max=10, interval=10), depends_on=initScrapeJob)
         return render_template("checkBacklater.html")
     else:
-        # populateRangeJob=init.enqueue('helpers.dbOperations.populateRangeTable', rangeId, retry=Retry(max=10, interval=10),job_timeout='24h')
-        # dailyScrapeJob = init.enqueue('workers.batchScrape', rangeId, retry=Retry(max=10, interval=10),job_timeout='24h', depends_on= populateRangeJob)
-        # createRangeLogTableJob = init.enqueue('helpers.dbOperations.createRangeLogTable', rangeId, retry=Retry(max=10, interval=10), depends_on=dailyScrapeJob)
-        # checkAndFillRangeLogJob = init.enqueue('workers.checkAndFillRange', rangeId, retry=Retry(max=10, interval=10), depends_on=createRangeLogTableJob)
-        # addToDistributionTable(rangeId)
         return redirect(url_for('views.caseData', rangeId = rangeId))
 
 @views.route("/invalid")
@@ -149,7 +146,7 @@ def scrapeAdmin():
     rangesList = returnAllRanges()
     for range in rangesList:
         init = Queue('default', connection=conn)
-        dailyScrapeJob = init.enqueue('workers.batchScrape', range, retry=Retry(max=10, interval=10),job_timeout='24h')
+        dailyScrapeJob = init.enqueue('workers.batchScrape', range, retry=Retry(max=10, interval=10),job_timeout='24h', job_id=getRangeText(range))
         createRangeLogTableJob = init.enqueue('helpers.dbOperations.createRangeLogTable', range, retry=Retry(max=10, interval=10), depends_on=dailyScrapeJob)
         checkAndFillRangeLogJob = init.enqueue('workers.checkAndFillRange', range, retry=Retry(max=10, interval=10), depends_on=createRangeLogTableJob)
     return render_template("checkBacklater.html")
