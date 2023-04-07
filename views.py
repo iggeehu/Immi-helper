@@ -19,7 +19,7 @@ from bokeh.embed import components
 from datetime import date, datetime
 from helpers.htmlHelpers import getWorkerBannerText
 from customWorker import conn
-conn = Redis()
+# conn = Redis()
 
 # 
 
