@@ -2,7 +2,7 @@ from customWorker import conn
 from rq import Queue, Worker
 from redis import Redis
 
-# conn = Redis()
+conn = Redis()
 
 def getWorkerBannerText():
     str="Scanning cases: "

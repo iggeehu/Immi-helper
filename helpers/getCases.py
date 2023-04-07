@@ -72,9 +72,10 @@ def getStatusDataPerTypeDict(rangeId):
     with DatabaseConnect("RangeLog") as (cnx, cursor):
         for caseType in CASE_TYPES:
             tableName = 'R' + rangeId
-            query="select * from "+tableName+" where caseType = %s and CollectionDate=curdate()"
+            query="select * from "+tableName+" where caseType = %s order by CollectionDate desc limit 1"
             cursor.execute(query, (caseType,))
             result = cursor.fetchone()
+           
             statusCountSegmentTuple = result[3:14]
             
             count = 0
